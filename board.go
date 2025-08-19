@@ -89,6 +89,7 @@ func (b Board) String() string {
 
 // figures out if and where dominoes can be laid
 func (b Board) WillDominoesFit() bool {
+	fmt.Println("Attempting to check if dominoes will fit on the board")
 	filledCells := map[string]any{} // track which cells have been accounted for
 
 	return b.exploreDominoFitPath(filledCells)

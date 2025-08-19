@@ -1,3 +1,3 @@
-module djlovell/pip_solver
+module djlovell/nyt_pips_solver
 
-go 1.25.0
+go 1.24.6
