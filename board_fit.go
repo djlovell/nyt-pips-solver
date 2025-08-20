@@ -33,12 +33,6 @@ func (s PossibleDominoFitSolution) String() string {
 	return out
 }
 
-func copyLocations(in []PossibleDominoLocation) []PossibleDominoLocation {
-	out := make([]PossibleDominoLocation, len(in))
-	copy(out, in)
-	return out
-}
-
 // figures out if and where dominoes can be laid
 func (b Board) DominoFitCheck() {
 	fmt.Println("Attempting to check if dominoes will fit on the board")
@@ -53,8 +47,8 @@ func (b Board) DominoFitCheck() {
 		}
 	}
 
-	locations := make([]PossibleDominoLocation, 0) // tracks locations of fitted dominoes for a possible solution
-	solutions := make([]PossibleDominoFitSolution, 0)
+	locations := make([]PossibleDominoLocation, 0)    // tracks locations of fitted dominoes for a possible solution
+	solutions := make([]PossibleDominoFitSolution, 0) // tracks discovered fit solutions
 
 	b.determinePossibleDominoLocations(cellsRemaining, locations, &solutions)
 	if len(solutions) == 0 {
@@ -90,80 +84,29 @@ func (b Board) determinePossibleDominoLocations(cellsRemaining map[string]*Cell,
 	// if at any point we encounter a cell that has no remaining neighbors that aren't accounted for...we have ran into an invalid fitment
 	neighborFound := false
 
-	// try filling with a right neighbor
-	if neighbor := nextCell.neighborRight; neighbor != nil {
-		// has the neighbor been accounted for?
-		if _, ok := cellsRemaining[neighbor.Identifier()]; ok {
-			neighborFound = true
-			// add the domino location to the list
-			locationsNew := copyLocations(locations)
-			locationsNew = append(locationsNew, PossibleDominoLocation{
-				cell1: nextCell,
-				cell2: neighbor,
-			})
-			// remove the cell and neighbor from the list and continue
-			cellsRemainingNew := copyCellsRemaining(cellsRemaining)
-			delete(cellsRemainingNew, nextCell.Identifier())
-			delete(cellsRemainingNew, neighbor.Identifier())
-			b.determinePossibleDominoLocations(cellsRemainingNew, locationsNew, solutionsOut)
+	for _, neighbor := range []*Cell{nextCell.neighborRight, nextCell.neighborBelow, nextCell.neighborLeft, nextCell.neighborAbove} {
+		// is there a neighbor at all?
+		if neighbor == nil {
+			continue
 		}
-	}
+		// has the neighbor already been accounting for?
+		if _, ok := cellsRemaining[neighbor.Identifier()]; !ok {
+			continue
+		}
 
-	// try filling with a below neighbor
-	if neighbor := nextCell.neighborBelow; neighbor != nil {
-		// has the neighbor been accounted for?
-		if _, ok := cellsRemaining[neighbor.Identifier()]; ok {
-			neighborFound = true
-			// add the domino location to the list
-			locationsNew := copyLocations(locations)
-			locationsNew = append(locationsNew, PossibleDominoLocation{
-				cell1: nextCell,
-				cell2: neighbor,
-			})
-			// remove the cell and neighbor from the list and continue
-			cellsRemainingNew := copyCellsRemaining(cellsRemaining)
-			delete(cellsRemainingNew, nextCell.Identifier())
-			delete(cellsRemainingNew, neighbor.Identifier())
-			b.determinePossibleDominoLocations(cellsRemainingNew, locationsNew, solutionsOut)
-		}
-	}
+		neighborFound = true
 
-	// try filling with a left neighbor
-	if neighbor := nextCell.neighborLeft; neighbor != nil {
-		// has the neighbor been accounted for?
-		if _, ok := cellsRemaining[neighbor.Identifier()]; ok {
-			neighborFound = true
-			// add the domino location to the list
-			locationsNew := copyLocations(locations)
-			locationsNew = append(locationsNew, PossibleDominoLocation{
-				cell1: nextCell,
-				cell2: neighbor,
-			})
-			// remove the cell and neighbor from the list and continue
-			cellsRemainingNew := copyCellsRemaining(cellsRemaining)
-			delete(cellsRemainingNew, nextCell.Identifier())
-			delete(cellsRemainingNew, neighbor.Identifier())
-			b.determinePossibleDominoLocations(cellsRemainingNew, locationsNew, solutionsOut)
-		}
-	}
-
-	// try filling with an above neighbor
-	if neighbor := nextCell.neighborAbove; neighbor != nil {
-		// has the neighbor been accounted for?
-		if _, ok := cellsRemaining[neighbor.Identifier()]; ok {
-			neighborFound = true
-			// add the domino location to the list
-			locationsNew := copyLocations(locations)
-			locationsNew = append(locationsNew, PossibleDominoLocation{
-				cell1: nextCell,
-				cell2: neighbor,
-			})
-			// remove the cell and neighbor from the list and continue
-			cellsRemainingNew := copyCellsRemaining(cellsRemaining)
-			delete(cellsRemainingNew, nextCell.Identifier())
-			delete(cellsRemainingNew, neighbor.Identifier())
-			b.determinePossibleDominoLocations(cellsRemainingNew, locationsNew, solutionsOut)
-		}
+		// add the domino location to the list
+		locationsNew := copyLocations(locations)
+		locationsNew = append(locationsNew, PossibleDominoLocation{
+			cell1: nextCell,
+			cell2: neighbor,
+		})
+		// remove the cell and neighbor from the list and continue
+		cellsRemainingNew := copyCellsRemaining(cellsRemaining)
+		delete(cellsRemainingNew, nextCell.Identifier())
+		delete(cellsRemainingNew, neighbor.Identifier())
+		b.determinePossibleDominoLocations(cellsRemainingNew, locationsNew, solutionsOut)
 	}
 
 	if !neighborFound {
@@ -175,5 +118,11 @@ func (b Board) determinePossibleDominoLocations(cellsRemaining map[string]*Cell,
 func copyCellsRemaining(in map[string]*Cell) map[string]*Cell {
 	out := make(map[string]*Cell)
 	maps.Copy(out, in)
+	return out
+}
+
+func copyLocations(in []PossibleDominoLocation) []PossibleDominoLocation {
+	out := make([]PossibleDominoLocation, len(in))
+	copy(out, in)
 	return out
 }
