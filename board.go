@@ -8,9 +8,9 @@ import (
 type Board [][]*Cell
 
 // Boards specs are expected to be consistently sized (e.g. 2x2, 16x4), and specify which cells are used for the game
-func InitializeBoard(spec [][]CellType) Board {
+func InitializeBoard(input [][]CellType) Board {
 	board := make([][]*Cell, 0)
-	for _, specRow := range spec {
+	for _, specRow := range input {
 		cellRow := make([]*Cell, 0)
 		for _, t := range specRow {
 			cellRow = append(cellRow, NewCell(t))
@@ -63,19 +63,30 @@ func InitializeBoard(spec [][]CellType) Board {
 	return board
 }
 
+// I hate it but the board looks prettier
 func (b Board) Print() {
+	xIdxMax := 0
 	fmt.Println("This is kinda what the board looks like...")
-	fmt.Println(b.String() + "\n")
-}
-
-func (b Board) String() string {
 	rowStrings := []string{}
-	for _, r := range b {
-		rowCells := []string{}
-		for _, c := range r {
-			rowCells = append(rowCells, c.String())
+	for yIdx, r := range b {
+		rowCells := []string{fmt.Sprintf("%-3d", yIdx)} // TODO: make Y index pad up to 3 digits
+		for xIdx, c := range r {
+			cellStr := "["
+			if c.inPlay {
+				cellStr += " "
+			} else {
+				cellStr += "X"
+			}
+			cellStr += "]"
+			rowCells = append(rowCells, cellStr)
+			xIdxMax = max(xIdxMax, xIdx)
 		}
 		rowStrings = append(rowStrings, strings.Join(rowCells, " "))
 	}
-	return strings.Join(rowStrings, "\n")
+	headerRowValues := []string{"   "}
+	for i := 0; i <= xIdxMax; i++ {
+		headerRowValues = append(headerRowValues, fmt.Sprintf("%-3d", i))
+	}
+	rowStrings = append([]string{strings.Join(headerRowValues, " ")}, rowStrings...)
+	fmt.Println(strings.Join(rowStrings, "\n") + "\n")
 }

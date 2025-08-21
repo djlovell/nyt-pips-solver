@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"strconv"
 )
 
@@ -17,31 +16,19 @@ type Cell struct {
 type CellType int
 
 const (
-	CellEmpty CellType = iota
+	CellUnused CellType = iota
 	CellInPlay
 )
 
 func NewCell(t CellType) *Cell {
 	switch t {
-	case CellEmpty:
+	case CellUnused:
 		return &Cell{inPlay: false}
 	case CellInPlay:
 		return &Cell{inPlay: true}
 	default:
 		panic("unknown cell type")
 	}
-}
-
-func (c Cell) String() string {
-	s := fmt.Sprintf("(%d,%d)", c.posX, c.posY)
-	s += "["
-	if !c.inPlay {
-		s += "X"
-	} else {
-		s += " "
-	}
-	s += "]"
-	return s
 }
 
 // unique identifier for a cell based on its position
