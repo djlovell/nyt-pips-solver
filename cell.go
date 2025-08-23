@@ -13,25 +13,19 @@ type Cell struct {
 	neighborLeft, neighborAbove, neighborRight, neighborBelow *Cell
 }
 
-type CellType int
+// unique identifier for a cell based on its position
+func (c Cell) Identifier() string {
+	return strconv.Itoa(c.posX) + ":" + strconv.Itoa(c.posY)
+}
 
-const (
-	CellUnused CellType = iota
-	CellInPlay
-)
-
-func NewCell(t CellType) *Cell {
-	switch t {
-	case CellUnused:
+// parses a Cell from an input specification
+func parseInputCell(s string) *Cell {
+	switch s {
+	case "X":
 		return &Cell{inPlay: false}
-	case CellInPlay:
+	case "O":
 		return &Cell{inPlay: true}
 	default:
 		panic("unknown cell type")
 	}
-}
-
-// unique identifier for a cell based on its position
-func (c Cell) Identifier() string {
-	return strconv.Itoa(c.posX) + ":" + strconv.Itoa(c.posY)
 }

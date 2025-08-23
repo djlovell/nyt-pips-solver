@@ -1,7 +1,7 @@
 package main
 
 func main() {
-	board := InitializeBoard(boardSpec)
+	board := InitializeBoard(inputCells)
 	board.Print()
 	board.DominoFitCheck()
 }

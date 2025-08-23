@@ -8,12 +8,12 @@ import (
 type Board [][]*Cell
 
 // Boards specs are expected to be consistently sized (e.g. 2x2, 16x4), and specify which cells are used for the game
-func InitializeBoard(input [][]CellType) Board {
+func InitializeBoard(inputCells [][]string) Board {
 	board := make([][]*Cell, 0)
-	for _, specRow := range input {
+	for _, specRow := range inputCells {
 		cellRow := make([]*Cell, 0)
-		for _, t := range specRow {
-			cellRow = append(cellRow, NewCell(t))
+		for _, c := range specRow {
+			cellRow = append(cellRow, parseInputCell(c))
 		}
 		board = append(board, cellRow)
 	}
