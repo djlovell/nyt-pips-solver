@@ -5,13 +5,11 @@ import (
 )
 
 func main() {
-	board, err := InitializeBoard(inputCells)
+	board, err := InitializeBoard(inputCells, inputConditions)
 	if err != nil {
 		panic(err)
 	}
-
-	_ = inputConditions // TODO: parse these, not sure about whether to make them board attributes, or an overlaid object
-	_ = inputDominoes   // TODO: parse these
+	_ = inputDominoes // TODO: parse these
 	board.Print()
 
 	// debug - verify that dominoes can fit on the board, and possible orientations

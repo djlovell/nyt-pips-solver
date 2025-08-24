@@ -10,13 +10,13 @@ import (
 
 // DominoArrangementLocation - defines a grouping of cells where a domino could be placed based on which cells are in play
 type DominoArrangementLocation struct {
-	cell1 *Cell
-	cell2 *Cell
+	cell1 string // identifier
+	cell2 string // identifier
 }
 
 // unique identifier for location (for de-duplication)
 func (l *DominoArrangementLocation) Identifier() string {
-	identifiers := []string{l.cell1.Identifier(), l.cell2.Identifier()}
+	identifiers := []string{l.cell1, l.cell2}
 	slices.Sort(identifiers)
 	return strings.Join(identifiers, "-")
 }
@@ -109,8 +109,8 @@ func findDominoArrangements(board *Board, unarrangedCells map[string]*Cell, loca
 		// add the domino location to the list
 		locationsNew := branchArrangementLocations(locations)
 		locationsNew = append(locationsNew, DominoArrangementLocation{
-			cell1: nextCell,
-			cell2: neighbor,
+			cell1: nextCell.Identifier(),
+			cell2: neighbor.Identifier(),
 		})
 
 		// remove the cell and neighbor from the list and continue

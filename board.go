@@ -7,11 +7,12 @@ import (
 )
 
 type Board struct {
-	cells [][]*Cell
+	cells      [][]*Cell
+	conditions []*Condition
 }
 
 // Loads a game board (utilized cells and conditions)
-func InitializeBoard(inputCells [][]string) (*Board, error) {
+func InitializeBoard(inputCells [][]string, inputConditions [][]string) (*Board, error) {
 	board := new(Board)
 
 	// cell initialization
@@ -20,7 +21,11 @@ func InitializeBoard(inputCells [][]string) (*Board, error) {
 		for _, specRow := range inputCells {
 			cellRow := make([]*Cell, 0)
 			for _, c := range specRow {
-				cellRow = append(cellRow, parseInputCell(c))
+				if p, err := parseInputCell(c); err != nil {
+					return nil, err
+				} else {
+					cellRow = append(cellRow, p)
+				}
 			}
 			cells = append(cells, cellRow)
 		}
@@ -70,7 +75,34 @@ func InitializeBoard(inputCells [][]string) (*Board, error) {
 		board.cells = cells
 	}
 
-	// condition initialization TODO
+	// condition initialization
+	{
+		conditions := make([]*Condition, 0)
+		for _, inputCond := range inputConditions {
+			condition, err := parseInputCondition(inputCond)
+			if err != nil {
+				return nil, err
+			}
+			// fact check that all the locations are actually valid cells
+			for _, conditionCellLoc := range condition.cellIdentifiers {
+				xPos, yPos, err := CellIdentifierToBoardPos(conditionCellLoc)
+				if err != nil {
+					return nil, err
+				}
+				if yPos >= len(board.cells) {
+					return nil, errors.New("input condition cell location out of y range")
+				}
+				if xPos >= len(board.cells[yPos]) {
+					return nil, errors.New("input condition cell location out of x range")
+				}
+				if cell := board.cells[yPos][xPos]; !cell.inPlay {
+					return nil, errors.New("input condition contains cell not in play")
+				}
+			}
+			conditions = append(conditions, condition)
+		}
+		board.conditions = conditions
+	}
 
 	return board, nil
 }
