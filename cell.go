@@ -41,6 +41,9 @@ func BoardPosToCellIdentifier(posX, posY int) string {
 // unpacks a cell identifier to x/y positions, also can be used to validate an alleged cell identifier "X:Y"
 func CellIdentifierToBoardPos(s string) (int, int, error) {
 	coords := strings.Split(s, ":")
+	if len(coords) != 2 {
+		return 0, 0, fmt.Errorf("failed to parse cell identifier - %s is not a valid format", s)
+	}
 	xPos, err := strconv.Atoi(coords[0])
 	if err != nil {
 		return 0, 0, fmt.Errorf("failed to parse cell identifier x position - %w", err)

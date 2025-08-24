@@ -46,32 +46,3 @@ var inputConditions = [][]string{
 var inputDominoes = []string{
 	"5|5", "0|2", "2|3",
 }
-
-// 8/18/25 easy puzzle
-// var inputCells = [][]string{
-// 	{"O", "O", "O", "O"},
-// 	{"X", "O", "O", "X"},
-// 	{"X", "O", "O", "X"},
-// }
-
-// // 8/19/25 hard puzzle
-// var inputCells = [][]string{
-// 	{"O", "O", "X", "X", "X", "X"},
-// 	{"O", "O", "X", "X", "X", "X"},
-// 	{"O", "O", "O", "O", "X", "O"},
-// 	{"X", "O", "O", "O", "O", "O"},
-// 	{"X", "X", "O", "O", "O", "O"},
-// }
-
-// 8/20/25 hard puzzle
-// var inputCells = [][]string{
-// 	{"O", "X", "X", "X", "X", "X"},
-// 	{"O", "X", "X", "X", "X", "X"},
-// 	{"O", "X", "X", "X", "X", "X"},
-// 	{"O", "X", "X", "X", "X", "X"},
-// 	{"O", "O", "O", "O", "O", "O"},
-// 	{"O", "X", "X", "X", "X", "O"},
-// 	{"O", "X", "X", "X", "X", "O"},
-// 	{"O", "X", "X", "X", "X", "O"},
-// 	{"O", "X", "X", "X", "X", "O"},
-// }

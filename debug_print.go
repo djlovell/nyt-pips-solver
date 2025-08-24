@@ -4,7 +4,7 @@ import "reflect"
 
 // probably not idiomatic Go, but a fun way to do verbose/debug only print statements
 
-var debug bool = false
+var debug bool = true
 
 func debugPrint(printStatement any, args ...any) {
 	if debug {
