@@ -6,18 +6,23 @@ import (
 	"strings"
 )
 
-type Board struct {
-	cells      [][]*cell
+type Game struct {
+	board      [][]*cell
 	conditions []*condition
+	dominoes   []*domino
 }
 
-// Loads a game board (utilized cells and conditions)
-func InitializeBoard(inputCells [][]string, inputConditions [][]string) (*Board, error) {
-	board := new(Board)
+// LoadGame - loads a game board from input
+func LoadGame(
+	inputCells [][]string,
+	inputConditions [][]string,
+	inputDominoes []string,
+) (*Game, error) {
+	game := new(Game)
 
 	// cell initialization
 	{
-		cells := make([][]*cell, 0)
+		board := make([][]*cell, 0)
 		gridWidth := -1 // set by first row, then used to make sure rows are fixed-width
 		for _, inputRow := range inputCells {
 			if gridWidth == -1 {
@@ -34,13 +39,13 @@ func InitializeBoard(inputCells [][]string, inputConditions [][]string) (*Board,
 					cellRow = append(cellRow, p)
 				}
 			}
-			cells = append(cells, cellRow)
+			board = append(board, cellRow)
 		}
 
 		// fill in cell positions and establish neighbors starting from the bottom/right of the board
-		for yIdx := len(cells) - 1; yIdx >= 0; yIdx-- {
-			for xIdx := len(cells[yIdx]) - 1; xIdx >= 0; xIdx-- {
-				cell := cells[yIdx][xIdx]
+		for yIdx := len(board) - 1; yIdx >= 0; yIdx-- {
+			for xIdx := len(board[yIdx]) - 1; xIdx >= 0; xIdx-- {
+				cell := board[yIdx][xIdx]
 				if cell == nil {
 					return nil, errors.New("nil cell found during initialization")
 				}
@@ -56,7 +61,7 @@ func InitializeBoard(inputCells [][]string, inputConditions [][]string) (*Board,
 
 				// establish neighbor associations with the neighbor to the left
 				if xIdx > 0 {
-					neighborLeft := cells[yIdx][xIdx-1]
+					neighborLeft := board[yIdx][xIdx-1]
 					if neighborLeft == nil {
 						return nil, errors.New("nil cell found during initialization")
 					}
@@ -68,7 +73,7 @@ func InitializeBoard(inputCells [][]string, inputConditions [][]string) (*Board,
 
 				// establish neighbor associations with the neighbor above
 				if yIdx > 0 {
-					neighborAbove := cells[yIdx-1][xIdx]
+					neighborAbove := board[yIdx-1][xIdx]
 					if neighborAbove == nil {
 						return nil, errors.New("nil cell found during initialization")
 					}
@@ -79,7 +84,7 @@ func InitializeBoard(inputCells [][]string, inputConditions [][]string) (*Board,
 				}
 			}
 		}
-		board.cells = cells
+		game.board = board
 	}
 
 	// condition initialization
@@ -96,13 +101,13 @@ func InitializeBoard(inputCells [][]string, inputConditions [][]string) (*Board,
 				if err != nil {
 					return nil, err
 				}
-				if yPos >= len(board.cells) {
+				if yPos >= len(game.board) {
 					return nil, errors.New("input condition cell location out of y range")
 				}
-				if xPos >= len(board.cells[yPos]) {
+				if xPos >= len(game.board[yPos]) {
 					return nil, errors.New("input condition cell location out of x range")
 				}
-				cell := board.cells[yPos][xPos]
+				cell := game.board[yPos][xPos]
 				if !cell.inPlay {
 					return nil, errors.New("input condition contains cell not in play")
 				}
@@ -111,20 +116,33 @@ func InitializeBoard(inputCells [][]string, inputConditions [][]string) (*Board,
 			}
 			conditions = append(conditions, condition)
 		}
-		board.conditions = conditions
+		game.conditions = conditions
 	}
 
-	return board, nil
+	// domino initialization
+	{
+		dominoes := make([]*domino, 0)
+		for _, inputDomino := range inputDominoes {
+			domino, err := parseInputDomino(inputDomino)
+			if err != nil {
+				return nil, err
+			}
+			dominoes = append(dominoes, domino)
+		}
+		game.dominoes = dominoes
+	}
+
+	return game, nil
 }
 
 // I hate it but this is my confirmation that input parsing worked for now
-func (b Board) Print() {
+func (b Game) Print() {
 	// pretty print the board
 	xIdxMax := 0
 	fmt.Println(strings.Repeat("*", 64))
 	fmt.Println("This is kinda what the board looks like...")
 	rowStrings := []string{}
-	for yIdx, r := range b.cells {
+	for yIdx, r := range b.board {
 		rowCells := []string{fmt.Sprintf("%-3d", yIdx)} // TODO: make Y index pad up to 3 digits
 		for xIdx, c := range r {
 			cellStr := "["
@@ -151,5 +169,13 @@ func (b Board) Print() {
 	for _, c := range b.conditions {
 		fmt.Printf("  %s", c.String())
 	}
+	fmt.Println()
+
+	// print out the dominoes
+	fmt.Println("Dominoes:")
+	for _, d := range b.dominoes {
+		fmt.Printf("  %s\n", d.String())
+	}
+
 	fmt.Println(strings.Repeat("*", 64))
 }

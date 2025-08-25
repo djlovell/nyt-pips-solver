@@ -30,17 +30,17 @@ func (s DominoArrangement) String() string {
 
 // GetDominoArrangements - determines possible arrangements for laying dominoes on a board.
 // Pre-computing valid domino positions will simplify solving later.
-func GetDominoArrangements(board *Board) ([]DominoArrangement, error) {
-	if board == nil {
+func GetDominoArrangements(game *Game) ([]DominoArrangement, error) {
+	if game == nil {
 		panic("nil board")
 	}
 	fmt.Println("Calculating possible arrangements for dominoes on the board...")
 
 	// create a map of cells in play to keep track of
 	cellsRemaining := make(map[string]*cell)
-	for yIdx := 0; yIdx < len(board.cells); yIdx++ {
-		for xIdx := 0; xIdx < len(board.cells[yIdx]); xIdx++ {
-			if cell := board.cells[yIdx][xIdx]; cell.inPlay {
+	for yIdx := 0; yIdx < len(game.board); yIdx++ {
+		for xIdx := 0; xIdx < len(game.board[yIdx]); xIdx++ {
+			if cell := game.board[yIdx][xIdx]; cell.inPlay {
 				cellsRemaining[cell.identifier()] = cell
 			}
 		}
@@ -49,7 +49,7 @@ func GetDominoArrangements(board *Board) ([]DominoArrangement, error) {
 	locations := make([]DominoArrangementLocation, 0) // tracks locations of fitted dominoes for a possible solution
 	solutions := make([]DominoArrangement, 0)         // tracks discovered fit solutions
 
-	findDominoArrangements(board, cellsRemaining, locations, &solutions)
+	findDominoArrangements(game, cellsRemaining, locations, &solutions)
 	if len(solutions) == 0 {
 		return nil, errors.New("no solutions found")
 	}
@@ -64,8 +64,8 @@ func GetDominoArrangements(board *Board) ([]DominoArrangement, error) {
 
 // attempts to recurse through different ways of fitting dominoes to a board without using loops
 // each recursive call will fit a domino into a cell and one of its neighbors, then remove the two from the remaining cells
-func findDominoArrangements(board *Board, unarrangedCells map[string]*cell, locations []DominoArrangementLocation, outArrangements *[]DominoArrangement) {
-	if board == nil {
+func findDominoArrangements(game *Game, unarrangedCells map[string]*cell, locations []DominoArrangementLocation, outArrangements *[]DominoArrangement) {
+	if game == nil {
 		panic("nil board")
 	}
 	if outArrangements == nil {
@@ -112,7 +112,7 @@ func findDominoArrangements(board *Board, unarrangedCells map[string]*cell, loca
 		cellsRemainingNew := branchUnarrangedCells(unarrangedCells)
 		delete(cellsRemainingNew, nextCell.identifier())
 		delete(cellsRemainingNew, neighbor.identifier())
-		findDominoArrangements(board, cellsRemainingNew, locationsNew, outArrangements)
+		findDominoArrangements(game, cellsRemainingNew, locationsNew, outArrangements)
 	}
 
 	if !neighborFound {
