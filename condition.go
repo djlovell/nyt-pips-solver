@@ -1,9 +1,8 @@
 package main
 
 import (
-	"errors"
 	"fmt"
-	"strconv"
+	"strings"
 )
 
 type Condition struct {
@@ -16,83 +15,44 @@ type ConditionExp int
 
 const (
 	ConditionExpSumEquals ConditionExp = iota
-	ConditionExpEquivalent
-	ConditionExpDistinct
 	ConditionExpSumLessThan
 	ConditionExpSumGreaterThan
+	ConditionExpEquivalent
+	ConditionExpDistinct
 )
 
-// parses a Condition from input specification
-func parseInputCondition(input []string) (*Condition, error) {
-	debugPrint(fmt.Printf, "Parsing input condition - %v\n", input)
-
-	if len(input) == 0 {
-		return nil, errors.New("empty input condition")
+func (c Condition) String() string {
+	s := "Cell"
+	switch len(c.cellIdentifiers) {
+	case 0:
+		panic("no cells for condition")
+	case 1:
+		s += " " + c.cellIdentifiers[0]
+	case 2:
+		s += fmt.Sprintf("s %s and %s", c.cellIdentifiers[0], c.cellIdentifiers[1])
+	default: // > 2 cells
+		s += fmt.Sprintf("s %s", strings.Join(c.cellIdentifiers, ", "))
+		if idx := strings.LastIndex(s, ","); idx != -1 {
+			sBeforeAnd := s[0 : idx+1]
+			sAfterAnd := s[idx+1:]
+			s = sBeforeAnd + " and" + sAfterAnd
+		}
 	}
-
-	inputPos := 0
-
-	var outExpression ConditionExp
-	var outOperand int
-	outCellIdentifiers := make([]string, 0)
-
-	// grab the expression first
-	inExpression := input[0]
-	operandRequired := false
-	switch inExpression {
-	// the ones that need an operand
-	case "N":
-		outExpression = ConditionExpSumEquals
-		operandRequired = true
-	case ">N":
-		outExpression = ConditionExpSumGreaterThan
-		operandRequired = true
-	case "<N":
-		outExpression = ConditionExpSumLessThan
-		operandRequired = true
-	// the ones that don't need an operand
-	case "=":
-		outExpression = ConditionExpEquivalent
-	case "!=":
-		outExpression = ConditionExpDistinct
+	s += " must "
+	switch c.expression {
+	case ConditionExpSumEquals:
+		s += fmt.Sprintf("add up to %d", c.operand)
+	case ConditionExpSumLessThan:
+		s += fmt.Sprintf("add up to less than %d", c.operand)
+	case ConditionExpSumGreaterThan:
+		s += fmt.Sprintf("add up to greater than %d", c.operand)
+	case ConditionExpEquivalent:
+		s += "all be the same"
+	case ConditionExpDistinct:
+		s += "all be different"
 	default:
-		return nil, fmt.Errorf("%s is not a recognized input condition expression", inExpression)
+		panic("unhandled expression type")
 	}
-	inputPos++
-
-	// figure out if an operand is expected, and if needed, try to parse that next
-	if operandRequired {
-		inOperand := input[1]
-		if len(input) < 3 {
-			return nil, errors.New("invalid input condition - missing either an operand or cell locations")
-		}
-		if i, err := strconv.Atoi(inOperand); err != nil {
-			return nil, fmt.Errorf("failed to parse error condition operand - %w", err)
-		} else if i < 0 {
-			return nil, errors.New("error condition operand should not be negative")
-		} else {
-			outOperand = i
-		}
-		inputPos++
-	} else {
-		if len(input) < 2 {
-			return nil, errors.New("invalid input condition - missing cell locations")
-		}
-	}
-
-	// parse cell positions next
-	for i := inputPos; i < len(input); i++ {
-		inCellPos := input[i]
-		xPos, yPos, err := CellIdentifierToBoardPos(inCellPos)
-		if err != nil {
-			return nil, fmt.Errorf("failed to parse error condition cell position - %w", err)
-		}
-		outCellIdentifiers = append(outCellIdentifiers, BoardPosToCellIdentifier(xPos, yPos))
-	}
-
-	return &Condition{
-		expression:      outExpression,
-		operand:         outOperand,
-		cellIdentifiers: outCellIdentifiers,
-	}, nil
+	s += "\n"
+	return s
 }

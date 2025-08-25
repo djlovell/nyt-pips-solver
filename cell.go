@@ -14,23 +14,15 @@ type Cell struct {
 	posX, posY int
 	// neighbor cells - will be nil if neighbor is unused
 	neighborLeft, neighborAbove, neighborRight, neighborBelow *Cell
+	// applicable conditions - this might be useful later for pre-emptively eliminating invalid solutions early in domino placement
+	// e.g. if the first domino is placed such that a "5" is on a cell with condition "sum < 5" or "4", that solution-path can
+	// be early terminated
+	applicableConditions []*Condition
 }
 
 // unique identifier for a cell based on its position
 func (c Cell) Identifier() string {
 	return BoardPosToCellIdentifier(c.posX, c.posY)
-}
-
-// parses a Cell from an input specification
-func parseInputCell(s string) (*Cell, error) {
-	switch s {
-	case "X":
-		return &Cell{inPlay: false}, nil
-	case "O":
-		return &Cell{inPlay: true}, nil
-	default:
-		return nil, fmt.Errorf("%s is an unknown input cell type", s)
-	}
 }
 
 // recovers a cell identifier from x/y positions on a board

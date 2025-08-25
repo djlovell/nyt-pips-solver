@@ -18,9 +18,16 @@ func InitializeBoard(inputCells [][]string, inputConditions [][]string) (*Board,
 	// cell initialization
 	{
 		cells := make([][]*Cell, 0)
-		for _, specRow := range inputCells {
+		gridWidth := -1 // set by first row, then used to make sure rows are fixed-width
+		for _, inputRow := range inputCells {
+			if gridWidth == -1 {
+				gridWidth = len(inputRow)
+			}
+			if len(inputRow) != gridWidth {
+				return nil, errors.New("input cell grid is not a consistent width")
+			}
 			cellRow := make([]*Cell, 0)
-			for _, c := range specRow {
+			for _, c := range inputRow {
 				if p, err := parseInputCell(c); err != nil {
 					return nil, err
 				} else {
@@ -95,9 +102,12 @@ func InitializeBoard(inputCells [][]string, inputConditions [][]string) (*Board,
 				if xPos >= len(board.cells[yPos]) {
 					return nil, errors.New("input condition cell location out of x range")
 				}
-				if cell := board.cells[yPos][xPos]; !cell.inPlay {
+				cell := board.cells[yPos][xPos]
+				if !cell.inPlay {
 					return nil, errors.New("input condition contains cell not in play")
 				}
+				// link condition to cell (in case this is needed/useful)
+				cell.applicableConditions = append(cell.applicableConditions, condition)
 			}
 			conditions = append(conditions, condition)
 		}
@@ -107,9 +117,11 @@ func InitializeBoard(inputCells [][]string, inputConditions [][]string) (*Board,
 	return board, nil
 }
 
-// I hate it but the board looks prettier
+// I hate it but this is my confirmation that input parsing worked for now
 func (b Board) Print() {
+	// pretty print the board
 	xIdxMax := 0
+	fmt.Println(strings.Repeat("*", 64))
 	fmt.Println("This is kinda what the board looks like...")
 	rowStrings := []string{}
 	for yIdx, r := range b.cells {
@@ -133,4 +145,11 @@ func (b Board) Print() {
 	}
 	rowStrings = append([]string{strings.Join(headerRowValues, " ")}, rowStrings...)
 	fmt.Println(strings.Join(rowStrings, "\n") + "\n")
+
+	// print out the conditions in english
+	fmt.Println("Conditions:")
+	for _, c := range b.conditions {
+		fmt.Printf("  %s", c.String())
+	}
+	fmt.Println(strings.Repeat("*", 64))
 }
