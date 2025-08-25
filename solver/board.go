@@ -1,4 +1,4 @@
-package main
+package solver
 
 import (
 	"errors"
@@ -7,8 +7,8 @@ import (
 )
 
 type Board struct {
-	cells      [][]*Cell
-	conditions []*Condition
+	cells      [][]*cell
+	conditions []*condition
 }
 
 // Loads a game board (utilized cells and conditions)
@@ -17,7 +17,7 @@ func InitializeBoard(inputCells [][]string, inputConditions [][]string) (*Board,
 
 	// cell initialization
 	{
-		cells := make([][]*Cell, 0)
+		cells := make([][]*cell, 0)
 		gridWidth := -1 // set by first row, then used to make sure rows are fixed-width
 		for _, inputRow := range inputCells {
 			if gridWidth == -1 {
@@ -26,7 +26,7 @@ func InitializeBoard(inputCells [][]string, inputConditions [][]string) (*Board,
 			if len(inputRow) != gridWidth {
 				return nil, errors.New("input cell grid is not a consistent width")
 			}
-			cellRow := make([]*Cell, 0)
+			cellRow := make([]*cell, 0)
 			for _, c := range inputRow {
 				if p, err := parseInputCell(c); err != nil {
 					return nil, err
@@ -84,7 +84,7 @@ func InitializeBoard(inputCells [][]string, inputConditions [][]string) (*Board,
 
 	// condition initialization
 	{
-		conditions := make([]*Condition, 0)
+		conditions := make([]*condition, 0)
 		for _, inputCond := range inputConditions {
 			condition, err := parseInputCondition(inputCond)
 			if err != nil {
@@ -92,7 +92,7 @@ func InitializeBoard(inputCells [][]string, inputConditions [][]string) (*Board,
 			}
 			// fact check that all the locations are actually valid cells
 			for _, conditionCellLoc := range condition.cellIdentifiers {
-				xPos, yPos, err := CellIdentifierToBoardPos(conditionCellLoc)
+				xPos, yPos, err := cellIdentifierToBoardPos(conditionCellLoc)
 				if err != nil {
 					return nil, err
 				}

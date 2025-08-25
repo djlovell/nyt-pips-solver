@@ -1,4 +1,4 @@
-package main
+package solver
 
 type domino struct {
 	Left  int

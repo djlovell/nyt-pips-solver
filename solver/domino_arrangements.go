@@ -1,4 +1,4 @@
-package main
+package solver
 
 import (
 	"errors"
@@ -37,11 +37,11 @@ func GetDominoArrangements(board *Board) ([]DominoArrangement, error) {
 	fmt.Println("Calculating possible arrangements for dominoes on the board...")
 
 	// create a map of cells in play to keep track of
-	cellsRemaining := make(map[string]*Cell)
+	cellsRemaining := make(map[string]*cell)
 	for yIdx := 0; yIdx < len(board.cells); yIdx++ {
 		for xIdx := 0; xIdx < len(board.cells[yIdx]); xIdx++ {
 			if cell := board.cells[yIdx][xIdx]; cell.inPlay {
-				cellsRemaining[cell.Identifier()] = cell
+				cellsRemaining[cell.identifier()] = cell
 			}
 		}
 	}
@@ -64,7 +64,7 @@ func GetDominoArrangements(board *Board) ([]DominoArrangement, error) {
 
 // attempts to recurse through different ways of fitting dominoes to a board without using loops
 // each recursive call will fit a domino into a cell and one of its neighbors, then remove the two from the remaining cells
-func findDominoArrangements(board *Board, unarrangedCells map[string]*Cell, locations []DominoArrangementLocation, outArrangements *[]DominoArrangement) {
+func findDominoArrangements(board *Board, unarrangedCells map[string]*cell, locations []DominoArrangementLocation, outArrangements *[]DominoArrangement) {
 	if board == nil {
 		panic("nil board")
 	}
@@ -89,13 +89,13 @@ func findDominoArrangements(board *Board, unarrangedCells map[string]*Cell, loca
 	// if at any point we encounter a cell that has no remaining neighbors that aren't accounted for...we have ran into an invalid fitment
 	neighborFound := false
 
-	for _, neighbor := range []*Cell{nextCell.neighborRight, nextCell.neighborBelow, nextCell.neighborLeft, nextCell.neighborAbove} {
+	for _, neighbor := range []*cell{nextCell.neighborRight, nextCell.neighborBelow, nextCell.neighborLeft, nextCell.neighborAbove} {
 		// is there a neighbor at all?
 		if neighbor == nil {
 			continue
 		}
 		// if the neighbor has been used by another domino, skip it
-		if _, ok := unarrangedCells[neighbor.Identifier()]; !ok {
+		if _, ok := unarrangedCells[neighbor.identifier()]; !ok {
 			continue
 		}
 
@@ -104,14 +104,14 @@ func findDominoArrangements(board *Board, unarrangedCells map[string]*Cell, loca
 		// add the domino location to the list
 		locationsNew := branchArrangementLocations(locations)
 		locationsNew = append(locationsNew, DominoArrangementLocation{
-			cell1: nextCell.Identifier(),
-			cell2: neighbor.Identifier(),
+			cell1: nextCell.identifier(),
+			cell2: neighbor.identifier(),
 		})
 
 		// remove the cell and neighbor from the list and continue
 		cellsRemainingNew := branchUnarrangedCells(unarrangedCells)
-		delete(cellsRemainingNew, nextCell.Identifier())
-		delete(cellsRemainingNew, neighbor.Identifier())
+		delete(cellsRemainingNew, nextCell.identifier())
+		delete(cellsRemainingNew, neighbor.identifier())
 		findDominoArrangements(board, cellsRemainingNew, locationsNew, outArrangements)
 	}
 
@@ -121,8 +121,8 @@ func findDominoArrangements(board *Board, unarrangedCells map[string]*Cell, loca
 	}
 }
 
-func branchUnarrangedCells(in map[string]*Cell) map[string]*Cell {
-	out := make(map[string]*Cell)
+func branchUnarrangedCells(in map[string]*cell) map[string]*cell {
+	out := make(map[string]*cell)
 	maps.Copy(out, in)
 	return out
 }
