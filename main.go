@@ -1,20 +1,21 @@
 package main
 
-import (
-	"fmt"
-)
-
 func main() {
+	// load the board (cells + conditions) from input
 	board, err := InitializeBoard(inputCells, inputConditions)
 	if err != nil {
 		panic(err)
 	}
-	_ = inputDominoes // TODO: parse these
 	board.Print()
 
-	// debug - verify that dominoes can fit on the board, and possible orientations
-	if err := GetDominoArrangements(board); err != nil {
-		fmt.Println(err)
-		return
+	_ = inputDominoes // TODO: load dominoes from input
+
+	// calculate possible ways dominoes can fit on the board
+	dominoArrangements, err := GetDominoArrangements(board)
+	if err != nil {
+		panic(err)
 	}
+
+	_ = dominoArrangements
+
 }

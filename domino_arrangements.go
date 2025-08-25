@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"maps"
 	"slices"
-	"strings"
 )
 
 // DominoArrangementLocation - defines a grouping of cells where a domino could be placed based on which cells are in play
@@ -14,29 +13,24 @@ type DominoArrangementLocation struct {
 	cell2 string // identifier
 }
 
-// unique identifier for location (for de-duplication)
-func (l *DominoArrangementLocation) Identifier() string {
-	identifiers := []string{l.cell1, l.cell2}
-	slices.Sort(identifiers)
-	return strings.Join(identifiers, "-")
-}
-
 // DominoArrangement - defines a set of locations on a board where dominoes could fit
 type DominoArrangement struct {
 	locations []DominoArrangementLocation
 }
 
 func (s DominoArrangement) String() string {
-	out := "Possible Fit Solution\n"
+	out := "Possible Arrangement\n"
 	for _, l := range s.locations {
-		out += "\t" + l.Identifier() + "\n"
+		identifiers := []string{l.cell1, l.cell2}
+		slices.Sort(identifiers)
+		out += fmt.Sprintf("  Cells %s-%s\n", identifiers[0], identifiers[1])
 	}
 	return out
 }
 
 // GetDominoArrangements - determines possible arrangements for laying dominoes on a board.
 // Pre-computing valid domino positions will simplify solving later.
-func GetDominoArrangements(board *Board) error {
+func GetDominoArrangements(board *Board) ([]DominoArrangement, error) {
 	if board == nil {
 		panic("nil board")
 	}
@@ -57,7 +51,7 @@ func GetDominoArrangements(board *Board) error {
 
 	findDominoArrangements(board, cellsRemaining, locations, &solutions)
 	if len(solutions) == 0 {
-		return errors.New("no solutions found")
+		return nil, errors.New("no solutions found")
 	}
 
 	fmt.Printf("%d possible domino arrangements found...\n", len(solutions))
@@ -65,7 +59,7 @@ func GetDominoArrangements(board *Board) error {
 		fmt.Println(solution.String())
 	}
 
-	return nil
+	return solutions, nil
 }
 
 // attempts to recurse through different ways of fitting dominoes to a board without using loops
@@ -84,7 +78,7 @@ func findDominoArrangements(board *Board, unarrangedCells map[string]*Cell, loca
 			locations: locations,
 		}
 		*outArrangements = append(*outArrangements, newSolution)
-		debugPrint(fmt.Println, "all cells accounted for! solution added...")
+		debugPrint(fmt.Println, "All cells accounted for and solution added...")
 		return
 	}
 
@@ -122,7 +116,7 @@ func findDominoArrangements(board *Board, unarrangedCells map[string]*Cell, loca
 	}
 
 	if !neighborFound {
-		debugPrint(fmt.Printf, "attempted arrangement resulted in an orphaned cell - %d cells unarranged...\n", len(unarrangedCells))
+		debugPrint(fmt.Printf, "Attempted arrangement resulted in an orphaned cell - %d cells unarranged...\n", len(unarrangedCells))
 		return
 	}
 }
