@@ -5,11 +5,14 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+
+	"github.com/google/uuid"
 )
 
 type domino struct {
-	val1 int
-	val2 int
+	identifier string // in case we need to uniquely identify these
+	val1       int
+	val2       int
 }
 
 func (d domino) String() string {
@@ -34,7 +37,8 @@ func parseInputDomino(s string) (*domino, error) {
 		return nil, errors.New("domino values must be between 0 and 6")
 	}
 	return &domino{
-		val1: val1,
-		val2: val2,
+		identifier: uuid.NewString(),
+		val1:       val1,
+		val2:       val2,
 	}, nil
 }

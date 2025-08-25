@@ -37,29 +37,22 @@ func GetDominoArrangements(game *Game) ([]DominoArrangement, error) {
 	fmt.Println("Calculating possible arrangements for dominoes on the board...")
 
 	// create a map of cells in play to keep track of
-	cellsRemaining := make(map[string]*cell)
-	for yIdx := 0; yIdx < len(game.board); yIdx++ {
-		for xIdx := 0; xIdx < len(game.board[yIdx]); xIdx++ {
-			if cell := game.board[yIdx][xIdx]; cell.inPlay {
-				cellsRemaining[cell.identifier()] = cell
-			}
-		}
-	}
+	cellsRemaining := branchUnarrangedCells(game.inPlayCellsByIdentifier)
 
 	locations := make([]DominoArrangementLocation, 0) // tracks locations of fitted dominoes for a possible solution
-	solutions := make([]DominoArrangement, 0)         // tracks discovered fit solutions
+	arrangements := make([]DominoArrangement, 0)      // tracks discovered fit solutions
 
-	findDominoArrangements(game, cellsRemaining, locations, &solutions)
-	if len(solutions) == 0 {
+	findDominoArrangements(game, cellsRemaining, locations, &arrangements)
+	if len(arrangements) == 0 {
 		return nil, errors.New("no solutions found")
 	}
 
-	fmt.Printf("%d possible domino arrangements found...\n", len(solutions))
-	for _, solution := range solutions {
+	fmt.Printf("%d possible domino arrangements found...\n", len(arrangements))
+	for _, solution := range arrangements {
 		fmt.Println(solution.String())
 	}
 
-	return solutions, nil
+	return arrangements, nil
 }
 
 // attempts to recurse through different ways of fitting dominoes to a board without using loops
@@ -78,7 +71,7 @@ func findDominoArrangements(game *Game, unarrangedCells map[string]*cell, locati
 			locations: locations,
 		}
 		*outArrangements = append(*outArrangements, newSolution)
-		debugPrint(fmt.Println, "All cells accounted for and solution added...")
+		debugPrint(fmt.Println, "All cells accounted for and arrangement added...")
 		return
 	}
 

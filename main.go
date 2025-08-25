@@ -1,6 +1,8 @@
 package main
 
-import "djlovell/nyt_pips_solver/solver"
+import (
+	"djlovell/nyt_pips_solver/solver"
+)
 
 func main() {
 	// load the game board from input
@@ -16,5 +18,8 @@ func main() {
 		panic(err)
 	}
 
-	_ = dominoArrangements
+	// try to solve each arrangement
+	for _, a := range dominoArrangements {
+		solver.TryArrangement(board, &a)
+	}
 }

@@ -1,0 +1,189 @@
+package solver
+
+import (
+	"fmt"
+	"maps"
+)
+
+type PossibleSolution struct {
+	dominoPlacements []DominoPlacement
+}
+
+type DominoPlacement struct {
+	cell1Identifier string
+	cell1Value      int
+	cell2Identifier string
+	cell2Value      int
+}
+
+func TryArrangement(game *Game, dominoArrangement *DominoArrangement) error {
+	if game == nil {
+		panic("nil game")
+	}
+	if dominoArrangement == nil {
+		panic("nil arrangement")
+	}
+	fmt.Println("Calculating possible solutions using arrangement...")
+	fmt.Println(dominoArrangement.String())
+
+	// track locations that have not been filled with a domino yet
+	unfilledLocations := dominoArrangement.locations
+
+	// track unplaced dominoes
+	unplacedDominoes := make(map[string]*domino)
+	for _, d := range game.dominoes {
+		unplacedDominoes[d.identifier] = d
+	}
+
+	placementsSoFar := make([]DominoPlacement, 0)
+	solutionsToCheck := make([]PossibleSolution, 0) // tracks possible complete solutions for checking
+
+	placeDomino(game, unfilledLocations, unplacedDominoes, placementsSoFar, &solutionsToCheck)
+	if len(solutionsToCheck) == 0 {
+		fmt.Println("No solutions found for arrangement...")
+	}
+
+	fmt.Printf("%d unchecked solutions found for arrangement...\n", len(solutionsToCheck))
+
+	return nil
+}
+
+// recursively places dominoes on the game board, testing along the way until a solution is reached
+func placeDomino(
+	game *Game,
+	unfilledLocations []DominoArrangementLocation,
+	unplacedDominoes map[string]*domino,
+	placementsSoFar []DominoPlacement,
+	outSolutionsToCheck *[]PossibleSolution,
+) {
+	if game == nil {
+		panic("nil board")
+	}
+	if len(unfilledLocations) != len(unplacedDominoes) {
+		panic("mismatch between number of dominoes and places to put them")
+	}
+
+	// base case - all locations have been filled with a
+	if len(unfilledLocations) == 0 {
+		newSolution := PossibleSolution{
+			dominoPlacements: placementsSoFar,
+		}
+		// TODO: test conditions at the end to see if we succeeded
+		*outSolutionsToCheck = append(*outSolutionsToCheck, newSolution)
+		debugPrint(fmt.Println, "All dominoes placed and possible solution added...")
+		return
+	}
+
+	// get the next location to fill
+	nextLocation := unfilledLocations[0]
+	remainingLocations := unfilledLocations[1:]
+
+	// try all dominoes, each in both orientations
+	for _, nextDomino := range unplacedDominoes {
+		for _, s := range []struct {
+			cell1Val, cell2Val int
+		}{
+			{
+				cell1Val: nextDomino.val1,
+				cell2Val: nextDomino.val2,
+			},
+			{
+				cell1Val: nextDomino.val2,
+				cell2Val: nextDomino.val1,
+			},
+		} {
+			unplacedDominoesNew := branchUnplacedDominoes(unplacedDominoes)
+
+			// remove the domino since it will have been placed
+			delete(unplacedDominoesNew, nextDomino.identifier)
+			placement := &DominoPlacement{
+				cell1Identifier: nextLocation.cell1,
+				cell1Value:      s.cell1Val,
+				cell2Identifier: nextLocation.cell2,
+				cell2Value:      s.cell2Val,
+			}
+
+			// pre-check this placement to see if it violates any conditions
+			// TODO: clean this up, but in tutorial problem, it reduced the
+			// number of solutions to check at the end from 48->8...promising
+			if fail := placement.doesPlacementFailConditionsEarly(game); fail {
+				continue
+			}
+
+			placementsSoFarNew := branchPlacementsSoFar(placementsSoFar)
+			placementsSoFarNew = append(placementsSoFarNew, *placement)
+			placeDomino(game, remainingLocations, unplacedDominoesNew, placementsSoFarNew, outSolutionsToCheck)
+		}
+	}
+}
+
+// experimental - seeing how many evaluation paths I can reduce by
+// early checking no brainer condition failures
+//
+// This strategy will need to be bolstered and cleaned up
+func (p DominoPlacement) doesPlacementFailConditionsEarly(g *Game) bool {
+	if g == nil {
+		panic("nil board")
+	}
+	cell1, ok := g.inPlayCellsByIdentifier[p.cell1Identifier]
+	if !ok {
+		panic("cell identifier not found in in play cells by identifier - check game loading")
+	}
+	cell2, ok := g.inPlayCellsByIdentifier[p.cell2Identifier]
+	if !ok {
+		panic("cell identifier not found in in play cells by identifier - check game loading")
+	}
+
+	for _, c := range []struct {
+		cell *cell
+		val  int
+	}{
+		{
+			cell: cell1,
+			val:  p.cell1Value,
+		},
+		{
+			cell: cell2,
+			val:  p.cell2Value,
+		},
+	} {
+		for _, cond := range c.cell.applicableConditions {
+			switch cond.expression {
+			case conditionExpSumEquals:
+				// fail early if cell by itself exceeds the collective sum
+				if c.val > cond.operand {
+					debugPrint(fmt.Printf, `Value %d in Cell %s violates "%s"`, c.val, c.cell.identifier(), cond.String())
+					return true
+				}
+			case conditionExpSumLessThan:
+				// fail early if cell by itself meets or exceeds collective sum
+				if p.cell1Value >= cond.operand {
+					debugPrint(fmt.Printf, `Value %d in Cell %s violates "%s"`, c.val, c.cell.identifier(), cond.String())
+					return true
+				}
+			case conditionExpSumGreaterThan:
+				// harder to check for without visiting other cells
+			case conditionExpEquivalent:
+				// harder to check for without visiting other cells
+			case conditionExpDistinct:
+				// harder to check for without visiting other cells
+			default:
+				panic("unhandled condition expression type")
+			}
+		}
+	}
+
+	return false
+}
+
+func branchUnplacedDominoes(in map[string]*domino) map[string]*domino {
+	out := make(map[string]*domino)
+	maps.Copy(out, in)
+	return out
+}
+
+func branchPlacementsSoFar(in []DominoPlacement) []DominoPlacement {
+	out := make([]DominoPlacement, len(in))
+	copy(out, in)
+	return out
+}

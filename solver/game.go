@@ -10,6 +10,8 @@ type Game struct {
 	board      [][]*cell
 	conditions []*condition
 	dominoes   []*domino
+	// helpers for solving
+	inPlayCellsByIdentifier map[string]*cell
 }
 
 // LoadGame - loads a game board from input
@@ -19,6 +21,7 @@ func LoadGame(
 	inputDominoes []string,
 ) (*Game, error) {
 	game := new(Game)
+	game.inPlayCellsByIdentifier = make(map[string]*cell)
 
 	// cell initialization
 	{
@@ -82,6 +85,9 @@ func LoadGame(
 						neighborAbove.neighborBelow = cell
 					}
 				}
+
+				// make the cell easily accessible by its identifier
+				game.inPlayCellsByIdentifier[cell.identifier()] = cell
 			}
 		}
 		game.board = board
@@ -127,6 +133,7 @@ func LoadGame(
 			if err != nil {
 				return nil, err
 			}
+			// make the domino easily accessible by its identifier
 			dominoes = append(dominoes, domino)
 		}
 		game.dominoes = dominoes
