@@ -78,20 +78,33 @@ func placeDomino(
 	nextLocation := unfilledLocations[0]
 	remainingLocations := unfilledLocations[1:]
 
-	// try all dominoes, each in both orientations
+	// try all dominoes
 	for _, nextDomino := range unplacedDominoes {
-		for _, s := range []struct {
+		// try both orientions if they are different too
+		type orientation struct {
 			cell1Val, cell2Val int
-		}{
+		}
+		orientations := []orientation{
 			{
 				cell1Val: nextDomino.val1,
 				cell2Val: nextDomino.val2,
 			},
-			{
+		}
+		if nextDomino.val1 != nextDomino.val2 {
+			orientations = append(orientations, orientation{
 				cell1Val: nextDomino.val2,
 				cell2Val: nextDomino.val1,
-			},
-		} {
+			})
+		} else {
+			debugPrint(fmt.Printf, "not checking reverse orientation of domino %s in location %s...\n", nextDomino.String(), nextLocation.String())
+		}
+		for i, s := range orientations {
+			if i == 0 {
+				debugPrint(fmt.Printf, "placing domino %s in location %s...\n", nextDomino.String(), nextLocation.String())
+			} else {
+				debugPrint(fmt.Printf, "placing domino %s in location %s (reverse orientation)...\n", nextDomino.String(), nextLocation.String())
+			}
+
 			unplacedDominoesNew := branchUnplacedDominoes(unplacedDominoes)
 
 			// remove the domino since it will have been placed
@@ -153,12 +166,14 @@ func (p DominoPlacement) doesPlacementFailConditionsEarly(g *Game) bool {
 				// fail early if cell by itself exceeds the collective sum
 				if c.val > cond.operand {
 					debugPrint(fmt.Printf, `Value %d in Cell %s violates "%s"`, c.val, c.cell.identifier(), cond.String())
+					debugPrint(fmt.Println)
 					return true
 				}
 			case conditionExpSumLessThan:
 				// fail early if cell by itself meets or exceeds collective sum
-				if p.cell1Value >= cond.operand {
+				if c.val >= cond.operand {
 					debugPrint(fmt.Printf, `Value %d in Cell %s violates "%s"`, c.val, c.cell.identifier(), cond.String())
+					debugPrint(fmt.Println)
 					return true
 				}
 			case conditionExpSumGreaterThan:

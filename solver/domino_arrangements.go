@@ -13,17 +13,21 @@ type DominoArrangementLocation struct {
 	cell2 string // identifier
 }
 
+func (a DominoArrangementLocation) String() string {
+	identifiers := []string{a.cell1, a.cell2}
+	slices.Sort(identifiers)
+	return fmt.Sprintf("Cells %s-%s\n", identifiers[0], identifiers[1])
+}
+
 // DominoArrangement - defines a set of locations on a board where dominoes could fit
 type DominoArrangement struct {
 	locations []DominoArrangementLocation
 }
 
-func (s DominoArrangement) String() string {
+func (a DominoArrangement) String() string {
 	out := "Possible Arrangement\n"
-	for _, l := range s.locations {
-		identifiers := []string{l.cell1, l.cell2}
-		slices.Sort(identifiers)
-		out += fmt.Sprintf("  Cells %s-%s\n", identifiers[0], identifiers[1])
+	for _, l := range a.locations {
+		out += "  " + l.String()
 	}
 	return out
 }
