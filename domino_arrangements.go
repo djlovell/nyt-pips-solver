@@ -34,12 +34,13 @@ func (s DominoArrangement) String() string {
 	return out
 }
 
-// figures out if and where dominoes can be laid
+// GetDominoArrangements - determines possible arrangements for laying dominoes on a board.
+// Pre-computing valid domino positions will simplify solving later.
 func GetDominoArrangements(board *Board) error {
 	if board == nil {
 		panic("nil board")
 	}
-	fmt.Println("Attempting to check if dominoes will fit on the board")
+	fmt.Println("Calculating possible arrangements for dominoes on the board...")
 
 	// create a map of cells in play to keep track of
 	cellsRemaining := make(map[string]*Cell)
@@ -59,7 +60,7 @@ func GetDominoArrangements(board *Board) error {
 		return errors.New("no solutions found")
 	}
 
-	fmt.Printf("%d possible domino fit solution(s) found...\n", len(solutions))
+	fmt.Printf("%d possible domino arrangements found...\n", len(solutions))
 	for _, solution := range solutions {
 		fmt.Println(solution.String())
 	}
