@@ -38,13 +38,13 @@ func main() {
 	}
 	inputGame, err := input.ReadFile(*inputFilename)
 	if err != nil {
-		fmt.Println(err)
+		fmt.Printf("Error: input file read failed with error - %s\n", err.Error())
 		return
 	}
 
 	game, err := solver.ParseInputGame(inputGame)
 	if err != nil {
-		fmt.Println(err)
+		fmt.Printf("Error: %s\n", err.Error())
 		return
 	}
 	game.Print()

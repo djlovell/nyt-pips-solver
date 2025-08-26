@@ -33,12 +33,12 @@ func ReadFile(filename string) (*Game, error) {
 	// load the game board from input
 	inputJSON, err := os.ReadFile(filename)
 	if err != nil {
-		return nil, errors.New("Error: fail to read JSON file")
+		return nil, errors.New("failed to read JSON file")
 	}
 
 	g := new(Game)
 	if err := json.Unmarshal(inputJSON, g); err != nil {
-		return nil, fmt.Errorf("Error: JSON parse failed with following error - %w", err)
+		return nil, fmt.Errorf("JSON parse failed with following error - %w", err)
 	}
 
 	return g, nil
