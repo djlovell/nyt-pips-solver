@@ -31,21 +31,21 @@ Dominoes shall be input as a []string, each string of the format "N|M", with no 
 */
 
 // in-game tutorial (at least as of 8/22) - confirmed working!
-var inputCells = [][]string{
-	{"X", "O", "O"},
-	{"X", "O", "O"},
-	{"O", "O", "X"},
-}
+// var inputCells = [][]string{
+// 	{"X", "O", "O"},
+// 	{"X", "O", "O"},
+// 	{"O", "O", "X"},
+// }
 
-var inputConditions = [][]string{
-	{"N", "0", "0:2"},
-	{"=", "1:1", "1:2"},
-	{"N", "10", "2:0", "2:1"},
-}
+// var inputConditions = [][]string{
+// 	{"N", "0", "0:2"},
+// 	{"=", "1:1", "1:2"},
+// 	{"N", "10", "2:0", "2:1"},
+// }
 
-var inputDominoes = []string{
-	"5|5", "0|2", "2|3",
-}
+// var inputDominoes = []string{
+// 	"5|5", "0|2", "2|3",
+// }
 
 // medium puzzle 8/26/2025 - confirmed working!
 // var inputCells = [][]string{
@@ -72,29 +72,29 @@ var inputDominoes = []string{
 // }
 
 // hard puzzle 8/26/2025 - confirmed working!
-// var inputCells = [][]string{
-// 	{"O", "O", "X", "X", "X", "X"},
-// 	{"O", "O", "X", "X", "X", "X"},
-// 	{"X", "O", "O", "O", "O", "X"},
-// 	{"X", "O", "O", "O", "O", "X"},
-// 	{"X", "O", "X", "X", "O", "X"},
-// 	{"X", "X", "X", "X", "O", "O"},
-// 	{"X", "X", "O", "O", "O", "O"},
-// }
+var inputCells = [][]string{
+	{"O", "O", "X", "X", "X", "X"},
+	{"O", "O", "X", "X", "X", "X"},
+	{"X", "O", "O", "O", "O", "X"},
+	{"X", "O", "O", "O", "O", "X"},
+	{"X", "O", "X", "X", "O", "X"},
+	{"X", "X", "X", "X", "O", "O"},
+	{"X", "X", "O", "O", "O", "O"},
+}
 
-// var inputConditions = [][]string{
-// 	{"N", "10", "0:0", "0:1"},
-// 	{"N", "1", "1:0", "1:1"},
-// 	{"=", "1:2", "1:3", "1:4"},
-// 	{"N", "12", "2:2", "2:3"},
-// 	{"!=", "3:2", "3:3", "4:3"},
-// 	{"=", "4:4", "4:5", "4:6"},
-// 	{"N", "4", "5:5"},
-// 	{"N", "0", "5:6"},
-// 	{"N", "6", "3:6"},
-// 	{"<N", "2", "2:6"},
-// }
+var inputConditions = [][]string{
+	{"N", "10", "0:0", "0:1"},
+	{"N", "1", "1:0", "1:1"},
+	{"=", "1:2", "1:3", "1:4"},
+	{"N", "12", "2:2", "2:3"},
+	{"!=", "3:2", "3:3", "4:3"},
+	{"=", "4:4", "4:5", "4:6"},
+	{"N", "4", "5:5"},
+	{"N", "0", "5:6"},
+	{"N", "6", "3:6"},
+	{"<N", "2", "2:6"},
+}
 
-// var inputDominoes = []string{
-// 	"6|0", "4|1", "3|6", "5|4", "3|3", "6|4", "2|3", "3|4", "3|0", "1|6",
-// }
+var inputDominoes = []string{
+	"6|0", "4|1", "3|6", "5|4", "3|3", "6|4", "2|3", "3|4", "3|0", "1|6",
+}

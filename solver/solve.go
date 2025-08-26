@@ -48,7 +48,7 @@ func (s *Solution) getCellValues() map[string] /* cell identifier */ int /*cell 
 // GetPossibleSolutionsForArrangement - finds different potential solutions to check.
 // Ideally, any obviously incorrect solutions (like ones that place a 5 in a cell that needs to be a 4)
 // have already been discarded. I expect the pre-vetting to improve in this function over time.
-func GetPossibleSolutionsForArrangement(game *Game, dominoArrangement *DominoArrangement) ([]Solution, error) {
+func GetPossibleSolutionsForArrangement(game *Game, dominoArrangement *DominoArrangement, outPossibleSolutions chan<- Solution) {
 	if game == nil {
 		panic("nil game")
 	}
@@ -70,16 +70,8 @@ func GetPossibleSolutionsForArrangement(game *Game, dominoArrangement *DominoArr
 	}
 
 	placementsSoFar := make([]DominoPlacement, 0)
-	solutionsToCheck := make([]Solution, 0) // tracks possible complete solutions for checking
 
-	placeDomino(game, unfilledLocations, unplacedDominoes, placementsSoFar, &solutionsToCheck)
-	if len(solutionsToCheck) == 0 {
-		fmt.Println("No solutions found for arrangement...")
-		return nil, nil
-	}
-	debugPrint(fmt.Printf, "%d unchecked solutions found for arrangement...\n", len(solutionsToCheck))
-
-	return solutionsToCheck, nil
+	placeDomino(game, unfilledLocations, unplacedDominoes, placementsSoFar, outPossibleSolutions)
 }
 
 // CheckSolution - returns if a possible solution successfully met all the conditions to solve the puzzle
@@ -114,7 +106,7 @@ func placeDomino(
 	unfilledLocations []DominoArrangementLocation,
 	unplacedDominoes map[string]*domino,
 	placementsSoFar []DominoPlacement,
-	outSolutionsToCheck *[]Solution,
+	outPossibleSolutions chan<- Solution,
 ) {
 	if game == nil {
 		panic("nil board")
@@ -129,7 +121,7 @@ func placeDomino(
 			dominoPlacements: placementsSoFar,
 		}
 		// TODO: test conditions at the end to see if we succeeded
-		*outSolutionsToCheck = append(*outSolutionsToCheck, newSolution)
+		outPossibleSolutions <- newSolution
 		debugPrint(fmt.Println, "All dominoes placed and possible solution added...")
 		return
 	}
@@ -186,7 +178,7 @@ func placeDomino(
 
 			placementsSoFarNew := branchPlacementsSoFar(placementsSoFar)
 			placementsSoFarNew = append(placementsSoFarNew, *placement)
-			placeDomino(game, remainingLocations, unplacedDominoesNew, placementsSoFarNew, outSolutionsToCheck)
+			placeDomino(game, remainingLocations, unplacedDominoesNew, placementsSoFarNew, outPossibleSolutions)
 		}
 	}
 }

@@ -148,6 +148,7 @@ func (b Game) Print() {
 	xIdxMax := 0
 	fmt.Println(strings.Repeat("*", 64))
 	fmt.Println("This is kinda what the board looks like...")
+	fmt.Println()
 	rowStrings := []string{}
 	for yIdx, r := range b.board {
 		rowCells := []string{fmt.Sprintf("%-3d", yIdx)} // TODO: make Y index pad up to 3 digits
@@ -164,7 +165,7 @@ func (b Game) Print() {
 		}
 		rowStrings = append(rowStrings, strings.Join(rowCells, " "))
 	}
-	headerRowValues := []string{"   "}
+	headerRowValues := []string{"Y\\X"}
 	for i := 0; i <= xIdxMax; i++ {
 		headerRowValues = append(headerRowValues, fmt.Sprintf("%-3d", i))
 	}
