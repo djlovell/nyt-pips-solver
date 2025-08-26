@@ -71,7 +71,7 @@ var inputDominoes = []string{
 // 	"3|5", "5|1", "0|3", "2|2", "2|6", "6|4", "4|0",
 // }
 
-// medium puzzle 8/26/2025 - confirmed working!
+// hard puzzle 8/26/2025 - confirmed working!
 // var inputCells = [][]string{
 // 	{"O", "O", "X", "X", "X", "X"},
 // 	{"O", "O", "X", "X", "X", "X"},
