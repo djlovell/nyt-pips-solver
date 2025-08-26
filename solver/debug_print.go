@@ -5,7 +5,11 @@ import "reflect"
 // probably not idiomatic Go, but a fun way to do verbose/debug only print statements
 
 // TODO: convert to environment variable?
-var debug bool = false
+var debug bool
+
+func SetDebugPrint(verbose bool) {
+	debug = verbose
+}
 
 func debugPrint(printStatement any, args ...any) {
 	if debug {

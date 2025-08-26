@@ -1,10 +1,9 @@
 package solver
 
 import (
+	"djlovell/nyt_pips_solver/input"
 	"errors"
 	"fmt"
-	"strconv"
-	"strings"
 
 	"github.com/google/uuid"
 )
@@ -20,19 +19,17 @@ func (d domino) String() string {
 }
 
 // parses a domino from an input specification
-func parseInputDomino(s string) (*domino, error) {
-	vals := strings.Split(s, "|")
-	if len(vals) != 2 {
-		return nil, fmt.Errorf("%s is not a valid domino input format", s)
+func parseInputDomino(d *input.Domino) (*domino, error) {
+	if d == nil {
+		panic("nil input domino")
 	}
-	val1, err := strconv.Atoi(vals[0])
-	if err != nil {
-		return nil, fmt.Errorf("failed to parse domino value - %w", err)
+	if d.Val1 == nil {
+		return nil, errors.New(`input file domino missing "val1`)
 	}
-	val2, err := strconv.Atoi(vals[1])
-	if err != nil {
-		return nil, fmt.Errorf("failed to parse domino value - %w", err)
+	if d.Val2 == nil {
+		return nil, errors.New(`input file domino missing "val2`)
 	}
+	val1, val2 := *d.Val1, *d.Val2
 	if val1 < 0 || val1 > 6 || val2 < 0 || val2 > 6 {
 		return nil, errors.New("domino values must be between 0 and 6")
 	}

@@ -1,6 +1,7 @@
 package solver
 
 import (
+	"djlovell/nyt_pips_solver/input"
 	"errors"
 	"fmt"
 	"strings"
@@ -14,20 +15,24 @@ type Game struct {
 	inPlayCellsByIdentifier map[string]*cell
 }
 
-// LoadGame - loads a game board from input
-func LoadGame(
-	inputCells [][]string,
-	inputConditions [][]string,
-	inputDominoes []string,
+// ParseInputGame - loads a game board from input
+func ParseInputGame(
+	input *input.Game,
 ) (*Game, error) {
+	if input == nil {
+		panic("nil input")
+	}
 	game := new(Game)
 	game.inPlayCellsByIdentifier = make(map[string]*cell)
 
 	// cell initialization
 	{
+		if input.Cells == nil {
+			return nil, errors.New(`input file missing "cells"`)
+		}
 		board := make([][]*cell, 0)
 		gridWidth := -1 // set by first row, then used to make sure rows are fixed-width
-		for _, inputRow := range inputCells {
+		for _, inputRow := range *input.Cells {
 			if gridWidth == -1 {
 				gridWidth = len(inputRow)
 			}
@@ -95,9 +100,13 @@ func LoadGame(
 
 	// condition initialization
 	{
+		if input.Conditions == nil {
+			return nil, errors.New(`input file missing "conditions"`)
+		}
+
 		conditions := make([]*condition, 0)
-		for _, inputCond := range inputConditions {
-			condition, err := parseInputCondition(inputCond)
+		for _, inputCond := range *input.Conditions {
+			condition, err := parseInputCondition(&inputCond)
 			if err != nil {
 				return nil, err
 			}
@@ -127,9 +136,13 @@ func LoadGame(
 
 	// domino initialization
 	{
+		if input.Dominoes == nil {
+			return nil, errors.New(`input file missing "dominoes"`)
+		}
+
 		dominoes := make([]*domino, 0)
-		for _, inputDomino := range inputDominoes {
-			domino, err := parseInputDomino(inputDomino)
+		for _, inputDomino := range *input.Dominoes {
+			domino, err := parseInputDomino(&inputDomino)
 			if err != nil {
 				return nil, err
 			}

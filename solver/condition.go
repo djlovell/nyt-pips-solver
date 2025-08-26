@@ -1,9 +1,9 @@
 package solver
 
 import (
+	"djlovell/nyt_pips_solver/input"
 	"errors"
 	"fmt"
-	"strconv"
 	"strings"
 )
 
@@ -110,23 +110,21 @@ func (c condition) check(cellValues map[string] /* cell identifier */ int /*cell
 }
 
 // parses a Condition from input specification
-func parseInputCondition(input []string) (*condition, error) {
-	debugPrint(fmt.Printf, "Parsing input condition - %v\n", input)
-
-	if len(input) == 0 {
-		return nil, errors.New("empty input condition")
+func parseInputCondition(input *input.Condition) (*condition, error) {
+	if input == nil {
+		panic("nil input condition")
 	}
-
-	inputPos := 0
 
 	var outExpression conditionExp
 	var outOperand int
 	outCellIdentifiers := make([]string, 0)
 
 	// grab the expression first
-	inExpression := input[0]
+	if input.Expression == nil {
+		return nil, errors.New(`input file condition missing "expression"`)
+	}
 	operandRequired := false
-	switch inExpression {
+	switch e := *input.Expression; e {
 	// the ones that need an operand
 	case "N":
 		outExpression = conditionExpSumEquals
@@ -143,38 +141,30 @@ func parseInputCondition(input []string) (*condition, error) {
 	case "!=":
 		outExpression = conditionExpDistinct
 	default:
-		return nil, fmt.Errorf("%s is not a recognized input condition expression", inExpression)
+		return nil, fmt.Errorf("%s is not a recognized input condition expression", e)
 	}
-	inputPos++
 
 	// figure out if an operand is expected, and if needed, try to parse that next
 	if operandRequired {
-		inOperand := input[1]
-		if len(input) < 3 {
-			return nil, errors.New("invalid input condition - missing either an operand or cell locations")
+		if input.Operand == nil {
+			return nil, fmt.Errorf(`input file condition expression "%s" missing "operand"`, *input.Expression)
 		}
-		if i, err := strconv.Atoi(inOperand); err != nil {
-			return nil, fmt.Errorf("failed to parse error condition operand - %w", err)
-		} else if i < 0 {
-			return nil, errors.New("error condition operand should not be negative")
+		if o := *input.Operand; o < 0 {
+			return nil, fmt.Errorf("input file condition operand cannot be a negative number")
 		} else {
-			outOperand = i
-		}
-		inputPos++
-	} else {
-		if len(input) < 2 {
-			return nil, errors.New("invalid input condition - missing cell locations")
+			outOperand = o
 		}
 	}
 
 	// parse cell positions next
-	for i := inputPos; i < len(input); i++ {
-		inCellPos := input[i]
-		xPos, yPos, err := cellIdentifierToBoardPos(inCellPos)
-		if err != nil {
-			return nil, fmt.Errorf("failed to parse error condition cell position - %w", err)
+	for _, c := range input.Cells {
+		if c.X == nil {
+			return nil, errors.New(`input file condition cell missing "x" position`)
 		}
-		outCellIdentifiers = append(outCellIdentifiers, boardPosToCellIdentifier(xPos, yPos))
+		if c.Y == nil {
+			return nil, errors.New(`input file condition cell missing "y" position`)
+		}
+		outCellIdentifiers = append(outCellIdentifiers, boardPosToCellIdentifier(*c.X, *c.Y))
 	}
 
 	return &condition{

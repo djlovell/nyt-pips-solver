@@ -1,24 +1,58 @@
 package main
 
 import (
+	"djlovell/nyt_pips_solver/input"
 	"djlovell/nyt_pips_solver/solver"
+	"errors"
+	"flag"
 	"fmt"
+	"os"
 	"strings"
 	"sync"
 )
 
 func main() {
-	// load the game board from input
-	board, err := solver.LoadGame(inputCells, inputConditions, inputDominoes)
-	if err != nil {
-		panic(err)
-	}
-	board.Print()
+	// define CL argument for specifying input json file
+	inputFilename := flag.String("f", "", "Input file (JSON)")
+	verbose := flag.Bool("v", false, "Enable debug output (it's not gonna be pretty...)")
 
-	// calculate possible ways dominoes can fit on the board
+	flag.Parse()
+	if inputFilename == nil {
+		panic("input file name flag should have at least defaulted to empty")
+	}
+	if verbose == nil {
+		panic("verbose flag should have defaulted to something")
+	}
+
+	if !strings.HasSuffix(*inputFilename, ".json") {
+		fmt.Println("Error: input file should be of the format *.json")
+		fmt.Println(*inputFilename)
+		return
+	}
+	solver.SetDebugPrint(*verbose)
+
+	// load the game input file
+	if _, err := os.Stat(*inputFilename); errors.Is(err, os.ErrNotExist) {
+		fmt.Println("Error: input file not found")
+		return
+	}
+	inputGame, err := input.ReadFile(*inputFilename)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	game, err := solver.ParseInputGame(inputGame)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	game.Print()
+
+	// calculate possible ways dominoes can fit on the game board
 	fmt.Println("Calculating possible domino arrangements...")
 	fmt.Println()
-	dominoArrangements, err := solver.GetDominoArrangements(board)
+	dominoArrangements, err := solver.GetDominoArrangements(game)
 	if err != nil {
 		panic(err)
 	}
@@ -34,7 +68,7 @@ func main() {
 			wg.Add(1)
 			go func() {
 				defer wg.Done()
-				solver.GetPossibleSolutionsForArrangement(board, &a, possibleSolutionChan)
+				solver.GetPossibleSolutionsForArrangement(game, &a, possibleSolutionChan)
 			}()
 		}
 		go func() {
@@ -56,7 +90,7 @@ func main() {
 			go func() {
 				defer wg.Done()
 				for s := range possibleSolutionChan {
-					correct, err := solver.CheckSolution(board, &s)
+					correct, err := solver.CheckSolution(game, &s)
 					if err != nil {
 						panic(err)
 					}
@@ -92,4 +126,6 @@ func main() {
 	for _, s := range validSolutions {
 		fmt.Println(s.String())
 	}
+
+	return
 }
