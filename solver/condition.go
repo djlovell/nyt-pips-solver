@@ -31,13 +31,13 @@ func (c condition) String() string {
 	case 1:
 		s += " " + c.cellIdentifiers[0]
 	case 2:
-		s += fmt.Sprintf("s %s and %s", c.cellIdentifiers[0], c.cellIdentifiers[1])
+		s += fmt.Sprintf("s %s & %s", c.cellIdentifiers[0], c.cellIdentifiers[1])
 	default: // > 2 cells
 		s += fmt.Sprintf("s %s", strings.Join(c.cellIdentifiers, ", "))
 		if idx := strings.LastIndex(s, ","); idx != -1 {
 			sBeforeAnd := s[0 : idx+1]
 			sAfterAnd := s[idx+1:]
-			s = sBeforeAnd + " and" + sAfterAnd
+			s = sBeforeAnd + " &" + sAfterAnd
 		}
 	}
 	s += " must "
@@ -55,8 +55,58 @@ func (c condition) String() string {
 	default:
 		panic("unhandled expression type")
 	}
-	s += "\n"
 	return s
+}
+
+// check - returns if cell values satisfy the condition or not
+func (c condition) check(cellValues map[string] /* cell identifier */ int /*cell value */) bool {
+	switch c.expression {
+	case conditionExpSumEquals:
+		sum := 0
+		for _, cell := range c.cellIdentifiers {
+			sum += cellValues[cell]
+		}
+		if sum != c.operand {
+			return false
+		}
+	case conditionExpSumLessThan:
+		sum := 0
+		for _, cell := range c.cellIdentifiers {
+			sum += cellValues[cell]
+		}
+		if sum >= c.operand {
+			return false
+		}
+	case conditionExpSumGreaterThan:
+		sum := 0
+		for _, cell := range c.cellIdentifiers {
+			sum += cellValues[cell]
+		}
+		if sum <= c.operand {
+			return false
+		}
+	case conditionExpEquivalent:
+		// just use first value as the "norm" and fail if anything else doesn't match
+		expectedVal := cellValues[c.cellIdentifiers[0]]
+		for _, cell := range c.cellIdentifiers {
+			if cellValues[cell] != expectedVal {
+				return false
+			}
+		}
+	case conditionExpDistinct:
+		foundVals := make(map[int]bool)
+		for _, cell := range c.cellIdentifiers {
+			cellVal := cellValues[cell]
+			if _, alreadyExists := foundVals[cellVal]; alreadyExists {
+				return false
+			}
+			foundVals[cellVal] = true
+		}
+	default:
+		panic("unexpected condition expression type")
+	}
+
+	return true
 }
 
 // parses a Condition from input specification

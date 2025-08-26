@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"maps"
 	"slices"
+	"strings"
 )
 
 // DominoArrangementLocation - defines a grouping of cells where a domino could be placed based on which cells are in play
@@ -38,22 +39,24 @@ func GetDominoArrangements(game *Game) ([]DominoArrangement, error) {
 	if game == nil {
 		panic("nil board")
 	}
-	fmt.Println("Calculating possible arrangements for dominoes on the board...")
+	debugPrint(fmt.Println, strings.Repeat("*", 64))
+	defer debugPrint(fmt.Println, strings.Repeat("*", 64)+"\n")
+	debugPrint(fmt.Println, "Calculating possible arrangements for dominoes on the board...")
 
 	// create a map of cells in play to keep track of
 	cellsRemaining := branchUnarrangedCells(game.inPlayCellsByIdentifier)
 
-	locations := make([]DominoArrangementLocation, 0) // tracks locations of fitted dominoes for a possible solution
-	arrangements := make([]DominoArrangement, 0)      // tracks discovered fit solutions
+	locations := make([]DominoArrangementLocation, 0) // tracks locations of fitted dominoes for a possible arrangement
+	arrangements := make([]DominoArrangement, 0)      // tracks discovered arrangements
 
 	findDominoArrangements(game, cellsRemaining, locations, &arrangements)
 	if len(arrangements) == 0 {
-		return nil, errors.New("no solutions found")
+		return nil, errors.New("no arrangements found")
 	}
 
-	fmt.Printf("%d possible domino arrangements found...\n", len(arrangements))
-	for _, solution := range arrangements {
-		fmt.Println(solution.String())
+	debugPrint(fmt.Printf, "%d possible domino arrangements found...\n", len(arrangements))
+	for _, a := range arrangements {
+		debugPrint(fmt.Println, a.String())
 	}
 
 	return arrangements, nil
@@ -69,7 +72,7 @@ func findDominoArrangements(game *Game, unarrangedCells map[string]*cell, locati
 		panic("nil output arrangements")
 	}
 
-	// base case - all cells have been accounted for in the arrangement, so save it as a solution
+	// base case - all cells have been accounted for in the arrangement, so save it
 	if len(unarrangedCells) == 0 {
 		newSolution := DominoArrangement{
 			locations: locations,

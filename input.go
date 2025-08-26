@@ -30,7 +30,7 @@ Not every cell needs to be covered by a condition, and conditions may overlap ac
 Dominoes shall be input as a []string, each string of the format "N|M", with no particular polarity, but where 0 <= N,M <= 6.
 */
 
-// in-game tutorial (at least as of 8/22)
+// in-game tutorial (at least as of 8/22) - confirmed working!
 var inputCells = [][]string{
 	{"X", "O", "O"},
 	{"X", "O", "O"},
@@ -46,3 +46,55 @@ var inputConditions = [][]string{
 var inputDominoes = []string{
 	"5|5", "0|2", "2|3",
 }
+
+// medium puzzle 8/26/2025 - confirmed working!
+// var inputCells = [][]string{
+// 	{"O", "X", "X", "X"},
+// 	{"O", "X", "X", "X"},
+// 	{"O", "X", "X", "X"},
+// 	{"O", "X", "X", "X"},
+// 	{"O", "O", "O", "O"},
+// 	{"O", "X", "X", "O"},
+// 	{"O", "X", "X", "O"},
+// 	{"O", "X", "X", "O"},
+// }
+
+// var inputConditions = [][]string{
+// 	{"N", "10", "0:1", "0:2"},
+// 	{"N", "1", "0:3", "0:4"},
+// 	{"=", "0:6", "0:7"},
+// 	{"N", "12", "2:4", "3:4"},
+// 	{"N", "8", "3:5", "3:6"},
+// }
+
+// var inputDominoes = []string{
+// 	"3|5", "5|1", "0|3", "2|2", "2|6", "6|4", "4|0",
+// }
+
+// medium puzzle 8/26/2025 - confirmed working!
+// var inputCells = [][]string{
+// 	{"O", "O", "X", "X", "X", "X"},
+// 	{"O", "O", "X", "X", "X", "X"},
+// 	{"X", "O", "O", "O", "O", "X"},
+// 	{"X", "O", "O", "O", "O", "X"},
+// 	{"X", "O", "X", "X", "O", "X"},
+// 	{"X", "X", "X", "X", "O", "O"},
+// 	{"X", "X", "O", "O", "O", "O"},
+// }
+
+// var inputConditions = [][]string{
+// 	{"N", "10", "0:0", "0:1"},
+// 	{"N", "1", "1:0", "1:1"},
+// 	{"=", "1:2", "1:3", "1:4"},
+// 	{"N", "12", "2:2", "2:3"},
+// 	{"!=", "3:2", "3:3", "4:3"},
+// 	{"=", "4:4", "4:5", "4:6"},
+// 	{"N", "4", "5:5"},
+// 	{"N", "0", "5:6"},
+// 	{"N", "6", "3:6"},
+// 	{"<N", "2", "2:6"},
+// }
+
+// var inputDominoes = []string{
+// 	"6|0", "4|1", "3|6", "5|4", "3|3", "6|4", "2|3", "3|4", "3|0", "1|6",
+// }

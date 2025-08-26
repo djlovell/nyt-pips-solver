@@ -1,1 +1,5 @@
+# windows executable
+*.exe
 
+# aptly named output files (from piping results to file), reserving *.txt for text input files
+output.*

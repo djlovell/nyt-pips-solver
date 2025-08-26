@@ -3,28 +3,62 @@ package solver
 import (
 	"fmt"
 	"maps"
+	"strings"
 )
 
-type PossibleSolution struct {
-	dominoPlacements []DominoPlacement
-}
-
+// DominoPlacement - the specific location and orientation of a domino in a Solution
 type DominoPlacement struct {
 	cell1Identifier string
 	cell1Value      int
 	cell2Identifier string
 	cell2Value      int
+	// string for pretty printing the domino
+	printString string
 }
 
-func TryArrangement(game *Game, dominoArrangement *DominoArrangement) error {
+func (p DominoPlacement) String() string {
+	return fmt.Sprintf(
+		"Domino %s placed with %d in Cell %s & %d in Cell %s\n",
+		p.printString, p.cell1Value, p.cell1Identifier, p.cell2Value, p.cell2Identifier,
+	)
+}
+
+// Solution - a complete layout of dominoes on the board
+type Solution struct {
+	dominoPlacements []DominoPlacement
+}
+
+func (s Solution) String() string {
+	out := "Solution\n"
+	for _, p := range s.dominoPlacements {
+		out += "  " + p.String()
+	}
+	return out
+}
+
+func (s *Solution) getCellValues() map[string] /* cell identifier */ int /*cell value */ {
+	m := make(map[string]int)
+	for _, p := range s.dominoPlacements {
+		m[p.cell1Identifier] = p.cell1Value
+		m[p.cell2Identifier] = p.cell2Value
+	}
+	return m
+}
+
+// GetPossibleSolutionsForArrangement - finds different potential solutions to check.
+// Ideally, any obviously incorrect solutions (like ones that place a 5 in a cell that needs to be a 4)
+// have already been discarded. I expect the pre-vetting to improve in this function over time.
+func GetPossibleSolutionsForArrangement(game *Game, dominoArrangement *DominoArrangement) ([]Solution, error) {
 	if game == nil {
 		panic("nil game")
 	}
 	if dominoArrangement == nil {
 		panic("nil arrangement")
 	}
-	fmt.Println("Calculating possible solutions using arrangement...")
-	fmt.Println(dominoArrangement.String())
+	debugPrint(fmt.Println, strings.Repeat("*", 64))
+	defer debugPrint(fmt.Println, strings.Repeat("*", 64)+"\n")
+	debugPrint(fmt.Println, "Calculating possible solutions using arrangement...")
+	debugPrint(fmt.Println, dominoArrangement.String())
 
 	// track locations that have not been filled with a domino yet
 	unfilledLocations := dominoArrangement.locations
@@ -36,16 +70,42 @@ func TryArrangement(game *Game, dominoArrangement *DominoArrangement) error {
 	}
 
 	placementsSoFar := make([]DominoPlacement, 0)
-	solutionsToCheck := make([]PossibleSolution, 0) // tracks possible complete solutions for checking
+	solutionsToCheck := make([]Solution, 0) // tracks possible complete solutions for checking
 
 	placeDomino(game, unfilledLocations, unplacedDominoes, placementsSoFar, &solutionsToCheck)
 	if len(solutionsToCheck) == 0 {
 		fmt.Println("No solutions found for arrangement...")
+		return nil, nil
+	}
+	debugPrint(fmt.Printf, "%d unchecked solutions found for arrangement...\n", len(solutionsToCheck))
+
+	return solutionsToCheck, nil
+}
+
+// CheckSolution - returns if a possible solution successfully met all the conditions to solve the puzzle
+func CheckSolution(game *Game, solution *Solution) (bool, error) {
+	if game == nil {
+		panic("nil game")
+	}
+	if solution == nil {
+		panic("nil solution")
+	}
+	debugPrint(fmt.Println, strings.Repeat("*", 64))
+	defer debugPrint(fmt.Println, strings.Repeat("*", 64)+"\n")
+	debugPrint(fmt.Println, "Checking possible solution...")
+	debugPrint(fmt.Println, solution.String())
+
+	// check each condition, early returning if one fails
+	cellValues := solution.getCellValues()
+	for _, cond := range game.conditions {
+		if ok := cond.check(cellValues); !ok {
+			debugPrint(fmt.Printf, `Solution violates "%s"`+"\n", cond.String())
+			return false, nil
+		}
 	}
 
-	fmt.Printf("%d unchecked solutions found for arrangement...\n", len(solutionsToCheck))
-
-	return nil
+	debugPrint(fmt.Println, "Solution appears valid!")
+	return true, nil
 }
 
 // recursively places dominoes on the game board, testing along the way until a solution is reached
@@ -54,7 +114,7 @@ func placeDomino(
 	unfilledLocations []DominoArrangementLocation,
 	unplacedDominoes map[string]*domino,
 	placementsSoFar []DominoPlacement,
-	outSolutionsToCheck *[]PossibleSolution,
+	outSolutionsToCheck *[]Solution,
 ) {
 	if game == nil {
 		panic("nil board")
@@ -65,7 +125,7 @@ func placeDomino(
 
 	// base case - all locations have been filled with a
 	if len(unfilledLocations) == 0 {
-		newSolution := PossibleSolution{
+		newSolution := Solution{
 			dominoPlacements: placementsSoFar,
 		}
 		// TODO: test conditions at the end to see if we succeeded
@@ -114,6 +174,7 @@ func placeDomino(
 				cell1Value:      s.cell1Val,
 				cell2Identifier: nextLocation.cell2,
 				cell2Value:      s.cell2Val,
+				printString:     nextDomino.String(),
 			}
 
 			// pre-check this placement to see if it violates any conditions

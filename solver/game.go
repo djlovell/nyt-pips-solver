@@ -115,7 +115,7 @@ func LoadGame(
 				}
 				cell := game.board[yPos][xPos]
 				if !cell.inPlay {
-					return nil, errors.New("input condition contains cell not in play")
+					return nil, fmt.Errorf("input condition contains cell %s not in play", cell.identifier())
 				}
 				// link condition to cell (in case this is needed/useful)
 				cell.applicableConditions = append(cell.applicableConditions, condition)
@@ -174,7 +174,7 @@ func (b Game) Print() {
 	// print out the conditions in english
 	fmt.Println("Conditions:")
 	for _, c := range b.conditions {
-		fmt.Printf("  %s", c.String())
+		fmt.Printf("  %s\n", c.String())
 	}
 	fmt.Println()
 
@@ -185,4 +185,5 @@ func (b Game) Print() {
 	}
 
 	fmt.Println(strings.Repeat("*", 64))
+	fmt.Println()
 }
