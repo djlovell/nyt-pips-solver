@@ -13,7 +13,7 @@ jobs:
     - name: Set up Go
       uses: actions/setup-go@v4
       with:
-        go-version: '1.24.x' # version in go.mod
+        go-version: '1.25.x' # version in go.mod
         
     - name: Download Go Dependencies
       run: go get .

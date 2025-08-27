@@ -12,7 +12,7 @@ I take no credit for the Pips game.
 Besides some documentation work, this was **NOT** an exercise in "Vibe Coding", "Promp Engineering", or even speeding up development time with AI auto-complete (i.e. Copilot). This tooling is exciting and useful, but I wanted to approach this more like a classic, semi closed web coding challenge. Perhaps down the road I might use my resources to explore potential optimizations, create a GUI to input/create game boards, or create fancy terminal visualizations with print statements - tasks I have far less interest in - but for now I am shooting for an unaided MVP that can reliably solve these puzzles. I saw none on Github at the time I started this project.
 
 ## Requirements
-- a working Go environment (>=1.24.6)
+- a working Go environment (>=1.25.x)
   - download link: https://go.dev/doc/install
 
 ## How to use

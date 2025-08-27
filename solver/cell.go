@@ -14,7 +14,7 @@ type cell struct {
 	posX, posY int
 	// neighbor cells - will be nil if neighbor is unused
 	neighborLeft, neighborAbove, neighborRight, neighborBelow *cell
-	// applicable conditions - this might be useful later for pre-emptively eliminating invalid solutions early in domino placement
+	// applicable conditions - this might be useful later for preemptively eliminating invalid solutions early in domino placement
 	// e.g. if the first domino is placed such that a "5" is on a cell with condition "sum < 5" or "4", that solution-path can
 	// be early terminated
 	applicableConditions []*condition

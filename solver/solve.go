@@ -46,8 +46,7 @@ func (s *Solution) getCellValues() map[string] /* cell identifier */ int /*cell 
 }
 
 // GetPossibleSolutionsForArrangement - finds different potential solutions to check.
-// Ideally, any obviously incorrect solutions (like ones that place a 5 in a cell that needs to be a 4)
-// have already been discarded. I expect the pre-vetting to improve in this function over time.
+// Ideally, a lot of incorrect solution paths are eliminated here with early condition checks.
 func GetPossibleSolutionsForArrangement(game *Game, dominoArrangement *DominoArrangement, outPossibleSolutions chan<- Solution) {
 	if game == nil {
 		panic("nil game")
@@ -132,7 +131,7 @@ func placeDomino(
 
 	// try all dominoes
 	for _, nextDomino := range unplacedDominoes {
-		// try both orientions if they are different too
+		// try both orientations if they are different too
 		type orientation struct {
 			cell1Val, cell2Val int
 		}
@@ -170,8 +169,6 @@ func placeDomino(
 			}
 
 			// pre-check this placement to see if it violates any conditions
-			// TODO: clean this up, but in tutorial problem, it reduced the
-			// number of solutions to check at the end from 48->8...promising
 			if fail := placement.doesPlacementFailConditionsEarly(game); fail {
 				continue
 			}
@@ -183,10 +180,9 @@ func placeDomino(
 	}
 }
 
-// experimental - seeing how many evaluation paths I can reduce by
-// early checking no brainer condition failures
-//
-// This strategy will need to be bolstered and cleaned up
+// TODO: this really belongs in condition.go, and could use more thought/refinement,
+// but serves the purpose of early-eliminating solution paths where a placement
+// single-handedly violates a condition. e.g. placing a 6 in a cell with "<5" condition.
 func (p DominoPlacement) doesPlacementFailConditionsEarly(g *Game) bool {
 	if g == nil {
 		panic("nil board")

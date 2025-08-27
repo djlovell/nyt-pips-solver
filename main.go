@@ -65,11 +65,9 @@ func main() {
 		// calculate possible solutions for each arrangement in parallel
 		wg := new(sync.WaitGroup)
 		for _, a := range dominoArrangements {
-			wg.Add(1)
-			go func() {
-				defer wg.Done()
+			wg.Go(func() {
 				solver.GetPossibleSolutionsForArrangement(game, &a, possibleSolutionChan)
-			}()
+			})
 		}
 		go func() {
 			wg.Wait()
@@ -86,9 +84,7 @@ func main() {
 		numCheckers := 100
 		wg := new(sync.WaitGroup)
 		for range numCheckers {
-			wg.Add(1)
-			go func() {
-				defer wg.Done()
+			wg.Go(func() {
 				for s := range possibleSolutionChan {
 					correct, err := solver.CheckSolution(game, &s)
 					if err != nil {
@@ -98,7 +94,7 @@ func main() {
 						validSolutionChan <- s
 					}
 				}
-			}()
+			})
 		}
 		go func() {
 			wg.Wait()
@@ -126,6 +122,4 @@ func main() {
 	for _, s := range validSolutions {
 		fmt.Println(s.String())
 	}
-
-	return
 }

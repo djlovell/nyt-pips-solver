@@ -3,3 +3,6 @@
 
 # don't check in dumped text files (input files are JSON)
 *.txt
+
+# local vs code settings - TODO: make a separate CSpell or other dictionary later
+.vscode
