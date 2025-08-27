@@ -29,6 +29,11 @@ jobs:
       - name: Check out repo
         uses: actions/checkout@v4
 
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.25.x' # version in go.mod
+
       - name: Run Tests
         run: | # the pipefail command lets me propagate a test failure through the output file pipe
           set -o pipefail
