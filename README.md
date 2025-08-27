@@ -1,7 +1,6 @@
 # nyt-pips-solver
 
 ## Overview
-
 This is my attempt at writing a Go based solver for the NYT Pips game released on 2025-08-18, and is strictly for fun! Accordingly, comments, unit tests, design plans, etc., if supplied, may not live up to professional standards.
 
 I take no credit for the Pips game. Maybe for the first solver on GitHub (none appeared on Google when I started the project).
@@ -23,5 +22,9 @@ Perhaps down the road I might leverage these resources to explore potential opti
 4. test one of the found solutions in your NYT Games App or on the website
 
 ## Feedback
-
 I would love to hear your feedback on my solution, optimization ideas, potential bugs, and the like. Contact info should be on my profile!
+
+## Usage/Contribution
+Feel free to use, share, copy (credit appreciated), or whatever else. 
+
+If you want to contribute tests, an input file creation UI, or something else - email me or create a PR.
