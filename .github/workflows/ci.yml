@@ -28,11 +28,10 @@ jobs:
       - name: Check out repo
         uses: actions/checkout@v4
 
-      - name: WHERE ARE WE
-        run: ls -l
-
       - name: Run Tests
-        run: ./publish-script.sh
+        run: |
+          chmod +x test.sh
+          ./test.sh
         shell: bash
       
     
