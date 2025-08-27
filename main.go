@@ -112,7 +112,7 @@ func main() {
 	fmt.Printf("NYT Pips Solver Completed. ")
 	switch l := len(validSolutions); l {
 	case 0:
-		fmt.Println("No valid soltions found (RIP).")
+		fmt.Println("No valid solutions found (RIP).")
 	case 1:
 		fmt.Println("Found a valid solution.\n\nGo try it on the NYT Games app/site!")
 		fmt.Println()
