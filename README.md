@@ -25,6 +25,10 @@ Perhaps down the road I may leverage more resources to explore optimizations, cr
 3. in a terminal, run `go run . -f {{your file name}}.json`
 4. test one of the found solutions in your NYT Games App or on the website
 
+Example
+
+<img width="903" height="1126" alt="image" src="https://github.com/user-attachments/assets/ba4f8ca7-f19b-4db1-97ee-bd1761edf285" />
+
 ## Feedback
 I would love to hear your feedback on my solution, optimization ideas, potential bugs, and the like. Contact info should be on my profile!
 
