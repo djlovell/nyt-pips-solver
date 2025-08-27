@@ -7,6 +7,8 @@ This is my attempt at writing a Go based solver for the NYT Pips game released o
 
 I take no credit for the Pips game. Maybe for the first solver on GitHub (none appeared on Google when I started the project).
 
+Update: As of 8/26/2025, I have seen a few nice ones online that are much more usable!
+
 [NYT Game Link Here](https://www.nytimes.com/games/pips)
 
 ## On AI Usage
