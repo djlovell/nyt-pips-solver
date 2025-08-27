@@ -30,7 +30,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Run Tests
-        run: | # the pipefail command lets me propogate a test failure through the output file pipe
+        run: | # the pipefail command lets me propagate a test failure through the output file pipe
           set -o pipefail
           chmod +x test.sh
           ./test.sh | tee "test_${{github.run_id}}.log"
