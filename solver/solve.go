@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"maps"
 	"strings"
+	"sync"
 )
 
 // DominoPlacement - the specific location and orientation of a domino in a Solution
@@ -62,19 +63,23 @@ func GetPossibleSolutionsForArrangement(game *Game, dominoArrangement *DominoArr
 	// track locations that have not been filled with a domino yet
 	unfilledLocations := dominoArrangement.locations
 
-	// track unplaced dominoes
+	// track unplaced and placed dominoes as time progresses
 	unplacedDominoes := make(map[string]*domino)
 	for _, d := range game.dominoes {
 		unplacedDominoes[d.identifier] = d
 	}
-
 	placementsSoFar := make([]DominoPlacement, 0)
 
-	placeDomino(game, unfilledLocations, unplacedDominoes, placementsSoFar, outPossibleSolutions)
+	// we can allow domino placement paths to be explored in parallel up to a certain depth without thrashing
+	// set to 10, I was able to observe 100% CPU/RAM usage and 100% sustained SSD activity...
+	//
+	// I started seeing negative return after 4 layers
+	maxConcurrentLayers := 4
+	placeDomino(game, unfilledLocations, unplacedDominoes, placementsSoFar, outPossibleSolutions, maxConcurrentLayers)
 }
 
 // CheckSolution - returns if a possible solution successfully met all the conditions to solve the puzzle
-func CheckSolution(game *Game, solution *Solution) (bool, error) {
+func CheckSolution(game *Game, solution *Solution) bool {
 	if game == nil {
 		panic("nil game")
 	}
@@ -91,12 +96,12 @@ func CheckSolution(game *Game, solution *Solution) (bool, error) {
 	for _, cond := range game.conditions {
 		if ok := cond.check(cellValues); !ok {
 			debugPrint(fmt.Printf, `Solution violates "%s"`+"\n", cond.String())
-			return false, nil
+			return false
 		}
 	}
 
 	debugPrint(fmt.Println, "Solution appears valid!")
-	return true, nil
+	return true
 }
 
 // recursively places dominoes on the game board, testing along the way until a solution is reached
@@ -106,6 +111,7 @@ func placeDomino(
 	unplacedDominoes map[string]*domino,
 	placementsSoFar []DominoPlacement,
 	outPossibleSolutions chan<- Solution,
+	concurrentLayersRemaining int,
 ) {
 	if game == nil {
 		panic("nil board")
@@ -130,6 +136,7 @@ func placeDomino(
 	remainingLocations := unfilledLocations[1:]
 
 	// try all dominoes
+	wg := new(sync.WaitGroup)
 	for _, nextDomino := range unplacedDominoes {
 		// skip the domino if it is blacklisted for the location
 		if _, blacklisted := (*nextLocation.blacklistedDominoIDs)[nextDomino.identifier]; blacklisted {
@@ -154,6 +161,7 @@ func placeDomino(
 		} else {
 			debugPrint(fmt.Printf, "not checking reverse orientation of domino %s in location %s...\n", nextDomino.String(), nextLocation.String())
 		}
+
 		for i, o := range orientations {
 			if i == 0 {
 				debugPrint(fmt.Printf, "placing domino %s in location %s...\n", nextDomino.String(), nextLocation.String())
@@ -180,9 +188,19 @@ func placeDomino(
 
 			placementsSoFarNew := branchPlacementsSoFar(placementsSoFar)
 			placementsSoFarNew = append(placementsSoFarNew, *placement)
-			placeDomino(game, remainingLocations, unplacedDominoesNew, placementsSoFarNew, outPossibleSolutions)
+
+			// perform the next placement recursively (concurrently, if still allowed)
+			nextRecursiveCall := func() {
+				placeDomino(game, remainingLocations, unplacedDominoesNew, placementsSoFarNew, outPossibleSolutions, concurrentLayersRemaining-1)
+			}
+			if concurrentLayersRemaining > 0 {
+				wg.Go(nextRecursiveCall)
+			} else {
+				nextRecursiveCall()
+			}
 		}
 	}
+	wg.Wait()
 }
 
 // TODO: this really belongs in condition.go, and could use more thought/refinement,

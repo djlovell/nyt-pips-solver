@@ -97,11 +97,7 @@ func main() {
 		for range numCheckers {
 			wg.Go(func() {
 				for s := range possibleSolutionChan {
-					correct, err := solver.CheckSolution(game, &s)
-					if err != nil {
-						panic(err)
-					}
-					if correct {
+					if correct := solver.CheckSolution(game, &s); correct {
 						validSolutionChan <- s
 					}
 				}
