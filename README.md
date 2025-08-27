@@ -1,5 +1,7 @@
 # nyt-pips-solver
 
+[![CI](https://github.com/djlovell/nyt-pips-solver/actions/workflows/ci.yml/badge.svg?branch=main&event=push)](https://github.com/djlovell/nyt-pips-solver/actions/workflows/ci.yml)
+
 ## Overview
 This is my attempt at writing a Go based solver for the NYT Pips game released on 2025-08-18, and is strictly for fun! Accordingly, comments, unit tests, design plans, etc., if supplied, may not live up to professional standards.
 
