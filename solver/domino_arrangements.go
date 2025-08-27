@@ -5,7 +5,6 @@ import (
 	"maps"
 	"slices"
 	"strings"
-	"sync"
 )
 
 // DominoArrangementLocation - defines a grouping of cells where a domino could be placed based on which cells are in play
@@ -90,14 +89,14 @@ func GetDominoArrangements(game *Game, outArrangements chan<- DominoArrangement)
 	defer debugPrint(fmt.Println, strings.Repeat("*", 64)+"\n")
 	debugPrint(fmt.Println, "Calculating possible arrangements for dominoes on the board...")
 
-	// create a map of cells in play to keep track of
-	cellsRemaining := branchUnarrangedCells(game.inPlayCellsByIdentifier)
+	// create a map of played cells to track which ones have been included in arrangements
+	cellsRemaining := make(map[string]*cell)
+	maps.Copy(cellsRemaining, game.inPlayCellsByIdentifier)
 
 	locations := make([]DominoArrangementLocation, 0) // tracks locations of fitted dominoes for a possible arrangement
 
-	// we can allow paths to be explored in parallel up to a certain depth without thrashing
-	maxConcurrentLayers := 5
-	findDominoArrangements(game, cellsRemaining, locations, outArrangements, maxConcurrentLayers)
+	// start finding arrangements
+	findDominoArrangements(game, cellsRemaining, locations, outArrangements)
 }
 
 // attempts to recurse through different ways of fitting dominoes to a board without using loops
@@ -107,7 +106,6 @@ func findDominoArrangements(
 	unarrangedCells map[string]*cell,
 	locations []DominoArrangementLocation,
 	outArrangements chan<- DominoArrangement,
-	concurrentLayersRemaining int,
 ) {
 	if game == nil {
 		panic("nil board")
@@ -136,7 +134,6 @@ func findDominoArrangements(
 	// if at any point we encounter a cell that has no remaining neighbors that aren't accounted for...we have ran into an invalid fitment
 	neighborFound := false
 
-	wg := new(sync.WaitGroup)
 	for _, neighbor := range []*cell{nextCell.neighborRight, nextCell.neighborBelow, nextCell.neighborLeft, nextCell.neighborAbove} {
 		// is there a neighbor at all?
 		if neighbor == nil {
@@ -156,40 +153,23 @@ func findDominoArrangements(
 		}).addBlacklistedDominoIDs(game)
 
 		// add the domino location to the list
-		locationsNew := branchArrangementLocations(locations)
-		locationsNew = append(locationsNew, addedLocation)
+		locations = append(locations, addedLocation)
 
-		// remove the cell and neighbor from the list and continue
-		unarrangedCellsNew := branchUnarrangedCells(unarrangedCells)
-		delete(unarrangedCellsNew, nextCell.identifier())
-		delete(unarrangedCellsNew, neighbor.identifier())
+		// remove the cell and neighbor from the list
+		delete(unarrangedCells, nextCell.identifier())
+		delete(unarrangedCells, neighbor.identifier())
 
-		// perform the next placement recursively (concurrently, if still allowed)
-		nextRecursiveCall := func() {
-			findDominoArrangements(game, unarrangedCellsNew, locationsNew, outArrangements, concurrentLayersRemaining-1)
-		}
-		if concurrentLayersRemaining > 0 {
-			wg.Go(nextRecursiveCall)
-		} else {
-			nextRecursiveCall()
-		}
+		// perform the next placement recursively
+		findDominoArrangements(game, unarrangedCells, locations, outArrangements)
+
+		// backtrack
+		unarrangedCells[neighbor.identifier()] = neighbor
+		unarrangedCells[nextCell.identifier()] = nextCell
+		locations = locations[0 : len(locations)-1]
 	}
-	wg.Wait()
 
 	if !neighborFound {
 		debugPrint(fmt.Printf, "Attempted arrangement resulted in an orphaned cell - %d cells unarranged...\n", len(unarrangedCells))
 		return
 	}
-}
-
-func branchUnarrangedCells(in map[string]*cell) map[string]*cell {
-	out := make(map[string]*cell)
-	maps.Copy(out, in)
-	return out
-}
-
-func branchArrangementLocations(in []DominoArrangementLocation) []DominoArrangementLocation {
-	out := make([]DominoArrangementLocation, len(in))
-	copy(out, in)
-	return out
 }

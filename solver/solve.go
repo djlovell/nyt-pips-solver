@@ -3,8 +3,8 @@ package solver
 import (
 	"fmt"
 	"maps"
+	"slices"
 	"strings"
-	"sync"
 )
 
 // DominoPlacement - the specific location and orientation of a domino in a Solution
@@ -61,7 +61,8 @@ func GetPossibleSolutionsForArrangement(game *Game, dominoArrangement *DominoArr
 	debugPrint(fmt.Println, dominoArrangement.String())
 
 	// track locations that have not been filled with a domino yet
-	unfilledLocations := dominoArrangement.locations
+	unfilledLocations := make([]DominoArrangementLocation, len(dominoArrangement.locations))
+	copy(unfilledLocations, dominoArrangement.locations)
 
 	// track unplaced and placed dominoes as time progresses
 	unplacedDominoes := make(map[string]*domino)
@@ -70,12 +71,8 @@ func GetPossibleSolutionsForArrangement(game *Game, dominoArrangement *DominoArr
 	}
 	placementsSoFar := make([]DominoPlacement, 0)
 
-	// we can allow domino placement paths to be explored in parallel up to a certain depth without thrashing
-	// set to 10, I was able to observe 100% CPU/RAM usage and 100% sustained SSD activity...
-	//
-	// I started seeing negative return after 4 layers
-	maxConcurrentLayers := 4
-	placeDomino(game, unfilledLocations, unplacedDominoes, placementsSoFar, outPossibleSolutions, maxConcurrentLayers)
+	// start placing dominoes
+	placeDomino(game, unfilledLocations, unplacedDominoes, placementsSoFar, outPossibleSolutions)
 }
 
 // CheckSolution - returns if a possible solution successfully met all the conditions to solve the puzzle
@@ -111,7 +108,6 @@ func placeDomino(
 	unplacedDominoes map[string]*domino,
 	placementsSoFar []DominoPlacement,
 	outPossibleSolutions chan<- Solution,
-	concurrentLayersRemaining int,
 ) {
 	if game == nil {
 		panic("nil board")
@@ -135,11 +131,11 @@ func placeDomino(
 
 	// get the next location to fill
 	nextLocation := unfilledLocations[0]
-	remainingLocations := unfilledLocations[1:]
+	remainingLocations := make([]DominoArrangementLocation, len(unfilledLocations[1:]))
+	copy(remainingLocations, unfilledLocations[1:])
 
 	// try all dominoes
-	wg := new(sync.WaitGroup)
-	for _, nextDomino := range unplacedDominoes {
+	for _, nextDomino := range slices.Collect(maps.Values(unplacedDominoes)) {
 		// skip the domino if it is blacklisted for the location
 		if _, blacklisted := (*nextLocation.blacklistedDominoIDs)[nextDomino.identifier]; blacklisted {
 			continue
@@ -185,25 +181,19 @@ func placeDomino(
 			}
 
 			// remove the domino since it will have been placed
-			unplacedDominoesNew := branchUnplacedDominoes(unplacedDominoes)
-			delete(unplacedDominoesNew, nextDomino.identifier)
+			delete(unplacedDominoes, nextDomino.identifier)
 
 			// track the placement
-			placementsSoFarNew := branchPlacementsSoFar(placementsSoFar)
-			placementsSoFarNew = append(placementsSoFarNew, *placement)
+			placementsSoFar = append(placementsSoFar, *placement)
 
 			// perform the next placement recursively (concurrently, if still allowed)
-			nextRecursiveCall := func() {
-				placeDomino(game, remainingLocations, unplacedDominoesNew, placementsSoFarNew, outPossibleSolutions, concurrentLayersRemaining-1)
-			}
-			if concurrentLayersRemaining > 0 {
-				wg.Go(nextRecursiveCall)
-			} else {
-				nextRecursiveCall()
-			}
+			placeDomino(game, remainingLocations, unplacedDominoes, placementsSoFar, outPossibleSolutions)
+
+			// backtrack
+			placementsSoFar = placementsSoFar[0 : len(placementsSoFar)-1]
+			unplacedDominoes[nextDomino.identifier] = nextDomino
 		}
 	}
-	wg.Wait()
 }
 
 // TODO: this really belongs in condition.go, and could use more thought/refinement,
@@ -264,16 +254,4 @@ func (p DominoPlacement) doesPlacementFailConditionsEarly(g *Game) bool {
 	}
 
 	return false
-}
-
-func branchUnplacedDominoes(in map[string]*domino) map[string]*domino {
-	out := make(map[string]*domino)
-	maps.Copy(out, in)
-	return out
-}
-
-func branchPlacementsSoFar(in []DominoPlacement) []DominoPlacement {
-	out := make([]DominoPlacement, len(in))
-	copy(out, in)
-	return out
 }
