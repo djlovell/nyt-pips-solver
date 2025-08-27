@@ -118,8 +118,11 @@ func findDominoArrangements(
 
 	// base case - all cells have been accounted for in the arrangement, so save it
 	if len(unarrangedCells) == 0 {
+		// need to do this copy to prevent backtracking bugs (if using)
+		locationsCopy := make([]DominoArrangementLocation, len(locations))
+		copy(locationsCopy, locations)
 		newSolution := DominoArrangement{
-			locations: locations,
+			locations: locationsCopy,
 		}
 		outArrangements <- newSolution
 		debugPrint(fmt.Println, "All cells accounted for and arrangement added...")

@@ -122,10 +122,12 @@ func placeDomino(
 
 	// base case - all locations have been filled with a
 	if len(unfilledLocations) == 0 {
+		// need to do this copy to prevent backtracking bugs (if using)
+		placementsCopy := make([]DominoPlacement, len(placementsSoFar))
+		copy(placementsCopy, placementsSoFar)
 		newSolution := Solution{
-			dominoPlacements: placementsSoFar,
+			dominoPlacements: placementsCopy,
 		}
-		// TODO: test conditions at the end to see if we succeeded
 		outPossibleSolutions <- newSolution
 		debugPrint(fmt.Println, "All dominoes placed and possible solution added...")
 		return
