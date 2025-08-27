@@ -64,6 +64,14 @@ func GetPossibleSolutionsForArrangement(game *Game, dominoArrangement *DominoArr
 	unfilledLocations := make([]DominoArrangementLocation, len(dominoArrangement.locations))
 	copy(unfilledLocations, dominoArrangement.locations)
 
+	// sort so the location with the fewest possibilities is evaluated first, reducing
+	// the breadth of the decision tree
+	//
+	// for one puzzle, starting with the least # of dominoes vs. most reduced solve time from 90s to 6s
+	slices.SortFunc(unfilledLocations, func(l, r DominoArrangementLocation) int {
+		return len(*r.blacklistedDominoIDs) - len(*l.blacklistedDominoIDs)
+	})
+
 	// track unplaced and placed dominoes as time progresses
 	unplacedDominoes := make(map[string]*domino)
 	for _, d := range game.dominoes {
@@ -129,7 +137,6 @@ func placeDomino(
 		return
 	}
 
-	// get the next location to fill
 	nextLocation := unfilledLocations[0]
 	remainingLocations := make([]DominoArrangementLocation, len(unfilledLocations[1:]))
 	copy(remainingLocations, unfilledLocations[1:])
