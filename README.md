@@ -10,9 +10,9 @@ I take no credit for the Pips game. Maybe for the first solver on GitHub (none a
 [NYT Game Link Here](https://www.nytimes.com/games/pips)
 
 ## On AI Usage
-Besides some documentation work and help with setting up Github Actions, this was **NOT** an exercise in "Vibe Coding", "Prompt Engineering", or even speeding up development time with AI auto-complete (i.e. Copilot). That tooling is exciting and useful, but I wanted to approach this more like a classic open-docs coding challenge.
+With the exception of some documentation & GH Actions setup, this was **NOT** an exercise in "Vibe Coding", "Prompt Engineering", or speed running development with enhanced auto-complete (i.e. Copilot). That tooling is exciting and useful, but I wanted to approach this like a classic open-docs coding challenge.
 
-Perhaps down the road I might leverage these resources to explore potential optimizations, create a proper GUI to generate input files for intuitively, or create fancy terminal visualizations with print statements - tasks I have far less interest in - but for now I am shooting for an unaided MVP that can reliably solve these puzzles.
+Perhaps down the road I may leverage more resources to explore optimizations, create a proper GUI for generating input files, or crafting fancy terminal visualizations using print statements - tasks I have far less interest in - but for now I am shooting for an unaided MVP that can reliably solve these puzzles.
 
 ## Requirements
 - a working Go environment (>=1.25.x) - [Download Here](https://go.dev/doc/install)
