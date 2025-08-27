@@ -146,22 +146,24 @@ func findDominoArrangements(
 
 		neighborFound = true
 
-		// add the domino location to the list
-		locationsNew := branchArrangementLocations(locations)
-		addedLocation := &DominoArrangementLocation{
+		// generate the location to add
+		addedLocation := *(&DominoArrangementLocation{
 			cell1: nextCell.identifier(),
 			cell2: neighbor.identifier(),
-		}
-		locationsNew = append(locationsNew, *addedLocation.addBlacklistedDominoIDs(game))
+		}).addBlacklistedDominoIDs(game)
+
+		// add the domino location to the list
+		locationsNew := branchArrangementLocations(locations)
+		locationsNew = append(locationsNew, addedLocation)
 
 		// remove the cell and neighbor from the list and continue
-		cellsRemainingNew := branchUnarrangedCells(unarrangedCells)
-		delete(cellsRemainingNew, nextCell.identifier())
-		delete(cellsRemainingNew, neighbor.identifier())
+		unarrangedCellsNew := branchUnarrangedCells(unarrangedCells)
+		delete(unarrangedCellsNew, nextCell.identifier())
+		delete(unarrangedCellsNew, neighbor.identifier())
 
 		// perform the next placement recursively (concurrently, if still allowed)
 		nextRecursiveCall := func() {
-			findDominoArrangements(game, cellsRemainingNew, locationsNew, outArrangements, concurrentLayersRemaining-1)
+			findDominoArrangements(game, unarrangedCellsNew, locationsNew, outArrangements, concurrentLayersRemaining-1)
 		}
 		if concurrentLayersRemaining > 0 {
 			wg.Go(nextRecursiveCall)

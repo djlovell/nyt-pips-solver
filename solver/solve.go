@@ -169,10 +169,7 @@ func placeDomino(
 				debugPrint(fmt.Printf, "placing domino %s in location %s (reverse orientation)...\n", nextDomino.String(), nextLocation.String())
 			}
 
-			unplacedDominoesNew := branchUnplacedDominoes(unplacedDominoes)
-
-			// remove the domino since it will have been placed
-			delete(unplacedDominoesNew, nextDomino.identifier)
+			// generate the next placement
 			placement := &DominoPlacement{
 				cell1Identifier: nextLocation.cell1,
 				cell1Value:      o.cell1Val,
@@ -180,12 +177,16 @@ func placeDomino(
 				cell2Value:      o.cell2Val,
 				printString:     nextDomino.String(),
 			}
-
 			// pre-check this placement to see if it violates any conditions
 			if fail := placement.doesPlacementFailConditionsEarly(game); fail {
 				continue
 			}
 
+			// remove the domino since it will have been placed
+			unplacedDominoesNew := branchUnplacedDominoes(unplacedDominoes)
+			delete(unplacedDominoesNew, nextDomino.identifier)
+
+			// track the placement
 			placementsSoFarNew := branchPlacementsSoFar(placementsSoFar)
 			placementsSoFarNew = append(placementsSoFarNew, *placement)
 
