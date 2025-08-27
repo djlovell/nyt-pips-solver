@@ -2,21 +2,26 @@
 
 ## Overview
 
-This is my attempt at writing a Go based solver for the NYT Pips game released on 2025-08-18, and is strictly for fun! Comments, unit tests, design plans, etc., if supplied, are not going to adhere to professional standards.
+This is my attempt at writing a Go based solver for the NYT Pips game released on 2025-08-18, and is strictly for fun! Accordingly, comments, unit tests, design plans, etc., if supplied, may not live up to professional standards.
 
-Game Link: https://www.nytimes.com/games/pips
+I take no credit for the Pips game. Maybe for the first solver on GitHub (none appeared on Google when I started the project).
 
-I take no credit for the Pips game.
+[NYT Game Link Here](https://www.nytimes.com/games/pips)
 
 ## On AI Usage
-Besides some documentation work, this was **NOT** an exercise in "Vibe Coding", "Promp Engineering", or even speeding up development time with AI auto-complete (i.e. Copilot). This tooling is exciting and useful, but I wanted to approach this more like a classic, semi closed web coding challenge. Perhaps down the road I might use my resources to explore potential optimizations, create a GUI to input/create game boards, or create fancy terminal visualizations with print statements - tasks I have far less interest in - but for now I am shooting for an unaided MVP that can reliably solve these puzzles. I saw none on Github at the time I started this project.
+Besides some documentation work and help with setting up Github Actions, this was **NOT** an exercise in "Vibe Coding", "Prompt Engineering", or even speeding up development time with AI auto-complete (i.e. Copilot). That tooling is exciting and useful, but I wanted to approach this more like a classic open-docs coding challenge.
+
+Perhaps down the road I might leverage these resources to explore potential optimizations, create a proper GUI to generate input files for intuitively, or create fancy terminal visualizations with print statements - tasks I have far less interest in - but for now I am shooting for an unaided MVP that can reliably solve these puzzles.
 
 ## Requirements
-- a working Go environment (>=1.25.x)
-  - download link: https://go.dev/doc/install
+- a working Go environment (>=1.25.x) - [Download Here](https://go.dev/doc/install)
 
-## How to use
+## Quick Start
 1. clone the repo
 2. copy a known working example JSON file from `/test_files` or create one using the README in `/input`
 3. in a terminal, run `go run . -f {{your file name}}.json`
 4. test one of the found solutions in your NYT Games App or on the website
+
+## Feedback
+
+I would love to hear your feedback on my solution, optimization ideas, potential bugs, and the like. Contact info should be on my profile!
