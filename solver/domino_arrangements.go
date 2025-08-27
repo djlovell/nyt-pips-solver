@@ -1,7 +1,6 @@
 package solver
 
 import (
-	"errors"
 	"fmt"
 	"maps"
 	"slices"
@@ -12,12 +11,59 @@ import (
 type DominoArrangementLocation struct {
 	cell1 string // identifier
 	cell2 string // identifier
+	// potential optimization - pre-determine dominoes that can't go in this location
+	blacklistedDominoIDs *map[string]any
 }
 
 func (a DominoArrangementLocation) String() string {
 	identifiers := []string{a.cell1, a.cell2}
 	slices.Sort(identifiers)
 	return fmt.Sprintf("Cells %s-%s\n", identifiers[0], identifiers[1])
+}
+
+// experiment - filter down dominoes that can go in this location for later checking
+func (a *DominoArrangementLocation) addBlacklistedDominoIDs(g *Game) *DominoArrangementLocation {
+	conditionsForLocation := append(
+		g.inPlayCellsByIdentifier[a.cell1].applicableConditions,
+		g.inPlayCellsByIdentifier[a.cell2].applicableConditions...,
+	)
+	invalidDominoes := make(map[string]any)
+	for _, d := range g.dominoes {
+		for _, c := range conditionsForLocation {
+			// if both values in a domino fail a condition...blacklist the domino
+			switch c.expression {
+			case conditionExpSumEquals:
+				// both domino values exceed
+				if d.val1 > c.operand && d.val2 > c.operand {
+					invalidDominoes[d.identifier] = true
+					debugPrint(fmt.Printf, "Domino %s blacklisted for location %s\n", d.String(), a.String())
+				}
+			case conditionExpSumLessThan:
+				// both domino values meet or exceed
+				if d.val1 >= c.operand && d.val2 >= c.operand {
+					invalidDominoes[d.identifier] = true
+					debugPrint(fmt.Printf, "Domino %s blacklisted for location %s\n", d.String(), a.String())
+				}
+			case conditionExpSumGreaterThan:
+				// the condition only uses one cell and neither domino value is sufficient
+				if len(c.cellIdentifiers) == 1 {
+					if d.val1 <= c.operand && d.val2 <= c.operand {
+						invalidDominoes[d.identifier] = true
+						debugPrint(fmt.Printf, "Domino %s blacklisted for location %s\n", d.String(), a.String())
+					}
+				}
+			case conditionExpEquivalent:
+				// harder to check for without visiting other cells
+			case conditionExpDistinct:
+				// harder to check for without visiting other cells
+			default:
+				panic("unhandled condition expression type")
+			}
+		}
+	}
+
+	a.blacklistedDominoIDs = &invalidDominoes
+	return a
 }
 
 // DominoArrangement - defines a set of locations on a board where dominoes could fit
@@ -35,7 +81,7 @@ func (a DominoArrangement) String() string {
 
 // GetDominoArrangements - determines possible arrangements for laying dominoes on a board.
 // Pre-computing valid domino positions will simplify solving later.
-func GetDominoArrangements(game *Game) ([]DominoArrangement, error) {
+func GetDominoArrangements(game *Game, outArrangements chan<- DominoArrangement) {
 	if game == nil {
 		panic("nil board")
 	}
@@ -47,24 +93,13 @@ func GetDominoArrangements(game *Game) ([]DominoArrangement, error) {
 	cellsRemaining := branchUnarrangedCells(game.inPlayCellsByIdentifier)
 
 	locations := make([]DominoArrangementLocation, 0) // tracks locations of fitted dominoes for a possible arrangement
-	arrangements := make([]DominoArrangement, 0)      // tracks discovered arrangements
 
-	findDominoArrangements(game, cellsRemaining, locations, &arrangements)
-	if len(arrangements) == 0 {
-		return nil, errors.New("no arrangements found")
-	}
-
-	debugPrint(fmt.Printf, "%d possible domino arrangements found...\n", len(arrangements))
-	for _, a := range arrangements {
-		debugPrint(fmt.Println, a.String())
-	}
-
-	return arrangements, nil
+	findDominoArrangements(game, cellsRemaining, locations, outArrangements)
 }
 
 // attempts to recurse through different ways of fitting dominoes to a board without using loops
 // each recursive call will fit a domino into a cell and one of its neighbors, then remove the two from the remaining cells
-func findDominoArrangements(game *Game, unarrangedCells map[string]*cell, locations []DominoArrangementLocation, outArrangements *[]DominoArrangement) {
+func findDominoArrangements(game *Game, unarrangedCells map[string]*cell, locations []DominoArrangementLocation, outArrangements chan<- DominoArrangement) {
 	if game == nil {
 		panic("nil board")
 	}
@@ -77,7 +112,7 @@ func findDominoArrangements(game *Game, unarrangedCells map[string]*cell, locati
 		newSolution := DominoArrangement{
 			locations: locations,
 		}
-		*outArrangements = append(*outArrangements, newSolution)
+		outArrangements <- newSolution
 		debugPrint(fmt.Println, "All cells accounted for and arrangement added...")
 		return
 	}
@@ -103,10 +138,11 @@ func findDominoArrangements(game *Game, unarrangedCells map[string]*cell, locati
 
 		// add the domino location to the list
 		locationsNew := branchArrangementLocations(locations)
-		locationsNew = append(locationsNew, DominoArrangementLocation{
+		addedLocation := &DominoArrangementLocation{
 			cell1: nextCell.identifier(),
 			cell2: neighbor.identifier(),
-		})
+		}
+		locationsNew = append(locationsNew, *addedLocation.addBlacklistedDominoIDs(game))
 
 		// remove the cell and neighbor from the list and continue
 		cellsRemainingNew := branchUnarrangedCells(unarrangedCells)

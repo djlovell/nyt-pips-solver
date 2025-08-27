@@ -131,6 +131,11 @@ func placeDomino(
 
 	// try all dominoes
 	for _, nextDomino := range unplacedDominoes {
+		// skip the domino if it is blacklisted for the location
+		if _, blacklisted := (*nextLocation.blacklistedDominoIDs)[nextDomino.identifier]; blacklisted {
+			continue
+		}
+
 		// try both orientations if they are different too
 		type orientation struct {
 			cell1Val, cell2Val int
@@ -149,7 +154,7 @@ func placeDomino(
 		} else {
 			debugPrint(fmt.Printf, "not checking reverse orientation of domino %s in location %s...\n", nextDomino.String(), nextLocation.String())
 		}
-		for i, s := range orientations {
+		for i, o := range orientations {
 			if i == 0 {
 				debugPrint(fmt.Printf, "placing domino %s in location %s...\n", nextDomino.String(), nextLocation.String())
 			} else {
@@ -162,9 +167,9 @@ func placeDomino(
 			delete(unplacedDominoesNew, nextDomino.identifier)
 			placement := &DominoPlacement{
 				cell1Identifier: nextLocation.cell1,
-				cell1Value:      s.cell1Val,
+				cell1Value:      o.cell1Val,
 				cell2Identifier: nextLocation.cell2,
-				cell2Value:      s.cell2Val,
+				cell2Value:      o.cell2Val,
 				printString:     nextDomino.String(),
 			}
 

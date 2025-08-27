@@ -9,6 +9,7 @@ import (
 	"os"
 	"strings"
 	"sync"
+	"time"
 )
 
 func main() {
@@ -49,12 +50,22 @@ func main() {
 	}
 	game.Print()
 
+	// start a timer for solving
+	startTime := time.Now()
+
 	// calculate possible ways dominoes can fit on the game board
 	fmt.Println("Calculating possible domino arrangements...")
 	fmt.Println()
-	dominoArrangements, err := solver.GetDominoArrangements(game)
-	if err != nil {
-		panic(err)
+	dominoArrangementChan := make(chan solver.DominoArrangement)
+	{
+		wg := new(sync.WaitGroup)
+		wg.Go(func() {
+			solver.GetDominoArrangements(game, dominoArrangementChan)
+		})
+		go func() {
+			wg.Wait()
+			close(dominoArrangementChan)
+		}()
 	}
 
 	// get possible solutions for each arrangement
@@ -64,7 +75,7 @@ func main() {
 	{
 		// calculate possible solutions for each arrangement in parallel
 		wg := new(sync.WaitGroup)
-		for _, a := range dominoArrangements {
+		for a := range dominoArrangementChan {
 			wg.Go(func() {
 				solver.GetPossibleSolutionsForArrangement(game, &a, possibleSolutionChan)
 			})
@@ -109,7 +120,7 @@ func main() {
 
 	fmt.Println(strings.Repeat("*", 64))
 	defer fmt.Println(strings.Repeat("*", 64))
-	fmt.Printf("NYT Pips Solver Completed. ")
+	fmt.Printf("NYT Pips Solver Completed in %f seconds. ", time.Since(startTime).Seconds())
 	switch l := len(validSolutions); l {
 	case 0:
 		fmt.Println("No valid solutions found (RIP).")
