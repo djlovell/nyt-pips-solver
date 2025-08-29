@@ -1,6 +1,7 @@
 package solver
 
 import (
+	"errors"
 	"fmt"
 	"maps"
 	"slices"
@@ -37,9 +38,12 @@ func (s Solution) String() string {
 	return out
 }
 
-func (s *Solution) getCellValues() map[string] /* cell identifier */ int /*cell value */ {
+func getCellValuesFromPlacements(placements *[]DominoPlacement) map[string] /* cell identifier */ int /*cell value */ {
+	if placements == nil {
+		panic("nil placements")
+	}
 	m := make(map[string]int)
-	for _, p := range s.dominoPlacements {
+	for _, p := range *placements {
 		m[p.cell1Identifier] = p.cell1Value
 		m[p.cell2Identifier] = p.cell2Value
 	}
@@ -97,9 +101,11 @@ func CheckSolution(game *Game, solution *Solution) bool {
 	debugPrint(fmt.Println, solution.String())
 
 	// check each condition, early returning if one fails
-	cellValues := solution.getCellValues()
+	cellValues := getCellValuesFromPlacements(&solution.dominoPlacements)
 	for _, cond := range game.conditions {
-		if ok := cond.check(cellValues); !ok {
+		if ok, err := cond.check(cellValues); err != nil {
+			panic("very unexpected error checking condition")
+		} else if !ok {
 			debugPrint(fmt.Printf, `Solution violates "%s"`+"\n", cond.String())
 			return false
 		}
@@ -135,6 +141,26 @@ func placeDomino(
 		outPossibleSolutions <- newSolution
 		debugPrint(fmt.Println, "All dominoes placed and possible solution added...")
 		return
+	}
+
+	// check for violated conditions before moving on
+	{
+		cellValuesSoFar := getCellValuesFromPlacements(&placementsSoFar)
+		for _, cond := range game.conditions {
+			ok, err := cond.check(cellValuesSoFar)
+			if err != nil {
+				if errors.Is(err, errConditionNotReadyToCheck) {
+					// condition just isn't ready to evaluate yet - move on with placing a domino
+					continue
+				}
+				panic("very unexpected error checking condition" + err.Error())
+			}
+			if !ok {
+				// condition failed! abort this path
+				return
+			}
+
+		}
 	}
 
 	nextLocation := unfilledLocations[0]
@@ -182,10 +208,6 @@ func placeDomino(
 				cell2Value:      o.cell2Val,
 				printString:     nextDomino.String(),
 			}
-			// pre-check this placement to see if it violates any conditions
-			if fail := placement.doesPlacementFailConditionsEarly(game); fail {
-				continue
-			}
 
 			// remove the domino since it will have been placed
 			delete(unplacedDominoes, nextDomino.identifier)
@@ -201,64 +223,4 @@ func placeDomino(
 			unplacedDominoes[nextDomino.identifier] = nextDomino
 		}
 	}
-}
-
-// TODO: this really belongs in condition.go, and could use more thought/refinement,
-// but serves the purpose of early-eliminating solution paths where a placement
-// single-handedly violates a condition. e.g. placing a 6 in a cell with "<5" condition.
-func (p DominoPlacement) doesPlacementFailConditionsEarly(g *Game) bool {
-	if g == nil {
-		panic("nil board")
-	}
-	cell1, ok := g.inPlayCellsByIdentifier[p.cell1Identifier]
-	if !ok {
-		panic("cell identifier not found in in play cells by identifier - check game loading")
-	}
-	cell2, ok := g.inPlayCellsByIdentifier[p.cell2Identifier]
-	if !ok {
-		panic("cell identifier not found in in play cells by identifier - check game loading")
-	}
-
-	for _, c := range []struct {
-		cell *cell
-		val  int
-	}{
-		{
-			cell: cell1,
-			val:  p.cell1Value,
-		},
-		{
-			cell: cell2,
-			val:  p.cell2Value,
-		},
-	} {
-		for _, cond := range c.cell.applicableConditions {
-			switch cond.expression {
-			case conditionExpSumEquals:
-				// fail early if cell by itself exceeds the collective sum
-				if c.val > cond.operand {
-					debugPrint(fmt.Printf, `Value %d in Cell %s violates "%s"`, c.val, c.cell.identifier(), cond.String())
-					debugPrint(fmt.Println)
-					return true
-				}
-			case conditionExpSumLessThan:
-				// fail early if cell by itself meets or exceeds collective sum
-				if c.val >= cond.operand {
-					debugPrint(fmt.Printf, `Value %d in Cell %s violates "%s"`, c.val, c.cell.identifier(), cond.String())
-					debugPrint(fmt.Println)
-					return true
-				}
-			case conditionExpSumGreaterThan:
-				// harder to check for without visiting other cells
-			case conditionExpEquivalent:
-				// harder to check for without visiting other cells
-			case conditionExpDistinct:
-				// harder to check for without visiting other cells
-			default:
-				panic("unhandled condition expression type")
-			}
-		}
-	}
-
-	return false
 }
