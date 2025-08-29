@@ -1,10 +1,11 @@
 package solver
 
 import (
-	"djlovell/nyt_pips_solver/input"
 	"errors"
 	"fmt"
 	"strings"
+
+	"djlovell/nyt_pips_solver/input"
 )
 
 type condition struct {
@@ -58,8 +59,17 @@ func (c condition) String() string {
 	return s
 }
 
+var errConditionNotReadyToCheck = errors.New("condition's cells are not ready to check yet")
+
 // check - returns if cell values satisfy the condition or not
-func (c condition) check(cellValues map[string] /* cell identifier */ int /*cell value */) bool {
+// returns errConditionNotReadyToCheck if not all cells have been filled
+func (c condition) check(cellValues map[string] /* cell identifier */ int /*cell value */) (bool, error) {
+	for _, cell := range c.cellIdentifiers {
+		if _, ok := cellValues[cell]; !ok {
+			return false, errConditionNotReadyToCheck
+		}
+	}
+
 	switch c.expression {
 	case conditionExpSumEquals:
 		sum := 0
@@ -67,7 +77,7 @@ func (c condition) check(cellValues map[string] /* cell identifier */ int /*cell
 			sum += cellValues[cell]
 		}
 		if sum != c.operand {
-			return false
+			return false, nil
 		}
 	case conditionExpSumLessThan:
 		sum := 0
@@ -75,7 +85,7 @@ func (c condition) check(cellValues map[string] /* cell identifier */ int /*cell
 			sum += cellValues[cell]
 		}
 		if sum >= c.operand {
-			return false
+			return false, nil
 		}
 	case conditionExpSumGreaterThan:
 		sum := 0
@@ -83,14 +93,14 @@ func (c condition) check(cellValues map[string] /* cell identifier */ int /*cell
 			sum += cellValues[cell]
 		}
 		if sum <= c.operand {
-			return false
+			return false, nil
 		}
 	case conditionExpEquivalent:
 		// just use first value as the "norm" and fail if anything else doesn't match
 		expectedVal := cellValues[c.cellIdentifiers[0]]
 		for _, cell := range c.cellIdentifiers {
 			if cellValues[cell] != expectedVal {
-				return false
+				return false, nil
 			}
 		}
 	case conditionExpDistinct:
@@ -98,7 +108,7 @@ func (c condition) check(cellValues map[string] /* cell identifier */ int /*cell
 		for _, cell := range c.cellIdentifiers {
 			cellVal := cellValues[cell]
 			if _, alreadyExists := foundVals[cellVal]; alreadyExists {
-				return false
+				return false, nil
 			}
 			foundVals[cellVal] = true
 		}
@@ -106,7 +116,7 @@ func (c condition) check(cellValues map[string] /* cell identifier */ int /*cell
 		panic("unexpected condition expression type")
 	}
 
-	return true
+	return true, nil
 }
 
 // parses a Condition from input specification
